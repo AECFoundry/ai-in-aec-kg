@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.vite/
+*.local
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.venv/
+neo4j_data/
+**/pipeline_cache/
+*.db
+.DS_Store
