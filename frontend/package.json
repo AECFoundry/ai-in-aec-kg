@@ -1,8 +1,8 @@
 {
-  "name": "frontend",
+  "name": "ai-in-aec-kg-frontend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Interactive 3D knowledge graph explorer for AI in AEC conference transcripts",
+  "private": true,
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -10,9 +10,7 @@
     "lint": "eslint src",
     "test": "vitest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "module",
   "dependencies": {
     "3d-force-graph": "^1.79.1",
@@ -21,6 +19,7 @@
     "react-dom": "^19.2.4",
     "react-force-graph-3d": "^1.29.1",
     "react-markdown": "^10.1.0",
+    "rehype-raw": "^7.0.0",
     "three": "^0.183.2",
     "three-spritetext": "^1.10.0",
     "zustand": "^5.0.12"

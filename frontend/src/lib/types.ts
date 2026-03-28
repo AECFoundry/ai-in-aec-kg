@@ -28,13 +28,23 @@ export interface SourceRef {
   name: string;
   label: string;
   score: number;
+  citation?: number;
+}
+
+export interface AgentTraceStep {
+  type: "thinking" | "tool_call" | "tool_progress" | "tool_result";
+  tool?: string;
+  detail: string;
 }
 
 export interface ChatMessage {
+  id?: string;
   role: "user" | "assistant";
   content: string;
   subgraph?: SubgraphHighlight;
   sources?: SourceRef[];
+  agentTrace?: AgentTraceStep[];
+  isStreaming?: boolean;
 }
 
 export interface SubgraphHighlight {

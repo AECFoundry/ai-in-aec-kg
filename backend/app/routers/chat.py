@@ -4,6 +4,7 @@ import json
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
+from langchain_core.messages import HumanMessage
 from neo4j import AsyncDriver
 from openai import AsyncOpenAI
 from sse_starlette.sse import EventSourceResponse
@@ -17,12 +18,40 @@ from app.models.schemas import (
     UserInfo,
 )
 from app.routers.auth import get_current_user
+from app.services.agent_graph import build_agent_graph
 from app.services.chat import add_message, compact_if_needed, get_history
-from app.services.graphrag import query_graph
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
+
+# Build the agent graph once at module level
+_agent = build_agent_graph()
+
+
+def _build_agent_input(question: str, history: list[ChatMessage]) -> dict:
+    """Build the initial state for the agent graph."""
+    return {
+        "messages": [HumanMessage(content=question)],
+        "question": question,
+        "chat_history": [
+            {"role": msg.role, "content": msg.content} for msg in history
+        ],
+        # Initialize reducer-managed fields so LangGraph has base values to merge
+        "visited_node_ids": set(),
+        "visited_link_ids": set(),
+        "collected_sources": [],
+    }
+
+
+def _build_config(driver: AsyncDriver, openai_client: AsyncOpenAI) -> dict:
+    """Build RunnableConfig with neo4j_driver and openai_client."""
+    return {
+        "configurable": {
+            "neo4j_driver": driver,
+            "openai_client": openai_client,
+        }
+    }
 
 
 @router.post("", response_model=ChatResponse)
@@ -32,34 +61,25 @@ async def chat(
     driver: AsyncDriver = Depends(get_neo4j_driver),
     openai_client: AsyncOpenAI = Depends(get_openai_client),
 ) -> ChatResponse:
-    """Run GraphRAG pipeline and return answer with subgraph highlight."""
-    user_id = user.email  # use email as session key
-
-    # Record user message
+    """Run agent pipeline and return answer with subgraph highlight."""
+    user_id = user.email
     add_message(user_id, "user", body.message)
-
-    # Compact memory if needed
     await compact_if_needed(user_id, openai_client)
-
-    # Get conversation context for the LLM
     history = get_history(user_id)
 
     try:
-        result = await query_graph(
-            question=body.message,
-            neo4j_driver=driver,
-            openai_client=openai_client,
-            chat_history=history,
+        result = await _agent.ainvoke(
+            _build_agent_input(body.message, history),
+            config=_build_config(driver, openai_client),
         )
     except Exception:
-        logger.exception("GraphRAG pipeline failed")
+        logger.exception("Agent pipeline failed")
         raise HTTPException(status_code=500, detail="Failed to process query")
 
     answer = result.get("answer", "I could not find a relevant answer.")
     subgraph = result.get("subgraph", {})
     sources = result.get("sources", [])
 
-    # Record assistant response
     add_message(user_id, "assistant", answer)
 
     return ChatResponse(
@@ -79,7 +99,7 @@ async def chat_stream(
     driver: AsyncDriver = Depends(get_neo4j_driver),
     openai_client: AsyncOpenAI = Depends(get_openai_client),
 ):
-    """SSE streaming endpoint for chat responses."""
+    """SSE streaming endpoint with agent reasoning trace."""
     user_id = user.email
     add_message(user_id, "user", body.message)
     await compact_if_needed(user_id, openai_client)
@@ -87,40 +107,55 @@ async def chat_stream(
 
     async def event_generator():
         try:
-            result = await query_graph(
-                question=body.message,
-                neo4j_driver=driver,
-                openai_client=openai_client,
-                chat_history=history,
-            )
-            answer = result.get("answer", "I could not find a relevant answer.")
-            subgraph = result.get("subgraph", {})
-            sources = result.get("sources", [])
+            agent_input = _build_agent_input(body.message, history)
+            config = _build_config(driver, openai_client)
 
-            add_message(user_id, "assistant", answer)
+            final_answer = ""
+            final_subgraph: dict = {}
+            final_sources: list = []
 
-            # Stream the answer in chunks
-            chunk_size = 80
-            for i in range(0, len(answer), chunk_size):
-                chunk = answer[i : i + chunk_size]
-                yield {
-                    "event": "token",
-                    "data": json.dumps({"content": chunk}),
-                }
+            async for event, chunk in _agent.astream(
+                agent_input,
+                config=config,
+                stream_mode=["updates", "custom"],
+            ):
+                if event == "custom":
+                    # Custom events from get_stream_writer() in tools/nodes
+                    event_type = chunk.get("type", "thinking")
+                    yield {
+                        "event": event_type,
+                        "data": json.dumps(chunk),
+                    }
 
-            # Send final event with subgraph and sources
+                elif event == "updates":
+                    # State updates from graph nodes
+                    if "finalize" in chunk:
+                        finalize_data = chunk["finalize"]
+                        final_answer = finalize_data.get("answer", "")
+                        final_subgraph = finalize_data.get("subgraph", {})
+                        final_sources = finalize_data.get("sources", [])
+
+                        # Stream the answer in chunks for typing effect
+                        chunk_size = 80
+                        for i in range(0, len(final_answer), chunk_size):
+                            text_chunk = final_answer[i : i + chunk_size]
+                            yield {
+                                "event": "token",
+                                "data": json.dumps({"content": text_chunk}),
+                            }
+
+            add_message(user_id, "assistant", final_answer)
+
             yield {
                 "event": "done",
-                "data": json.dumps(
-                    {
-                        "answer": answer,
-                        "subgraph": subgraph,
-                        "sources": sources,
-                    }
-                ),
+                "data": json.dumps({
+                    "answer": final_answer,
+                    "subgraph": final_subgraph,
+                    "sources": final_sources,
+                }),
             }
         except Exception:
-            logger.exception("SSE GraphRAG pipeline failed")
+            logger.exception("SSE agent pipeline failed")
             yield {
                 "event": "error",
                 "data": json.dumps({"detail": "Failed to process query"}),

@@ -11,6 +11,7 @@ export const colors = {
 
 export const nodeColors: Record<string, string> = {
   Session: "#f59e0b",
+  Presentation: "#fbbf24",
   Speaker: "#6366f1",
   Organization: "#10b981",
   Topic: "#f43f5e",
@@ -21,6 +22,7 @@ export const nodeColors: Record<string, string> = {
 
 export const nodeSizes: Record<string, number> = {
   Session: 8,
+  Presentation: 4,
   Speaker: 5,
   Organization: 5,
   Topic: 4,

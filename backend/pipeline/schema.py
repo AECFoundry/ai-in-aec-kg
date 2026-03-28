@@ -14,6 +14,8 @@ SCHEMA_QUERIES = [
     "CREATE CONSTRAINT tech_id IF NOT EXISTS FOR (tech:Technology) REQUIRE tech.id IS UNIQUE",
     "CREATE CONSTRAINT concept_id IF NOT EXISTS FOR (c:Concept) REQUIRE c.id IS UNIQUE",
     "CREATE CONSTRAINT project_id IF NOT EXISTS FOR (p:Project) REQUIRE p.id IS UNIQUE",
+    "CREATE CONSTRAINT presentation_id IF NOT EXISTS FOR (pr:Presentation) REQUIRE pr.id IS UNIQUE",
+    "CREATE CONSTRAINT chunk_id IF NOT EXISTS FOR (ch:TranscriptChunk) REQUIRE ch.id IS UNIQUE",
 ]
 
 VECTOR_INDEX_QUERIES = [
@@ -37,6 +39,12 @@ VECTOR_INDEX_QUERIES = [
       OPTIONS {indexConfig: {`vector.dimensions`: 3072, `vector.similarity_function`: 'cosine'}}""",
     """CREATE VECTOR INDEX project_embedding IF NOT EXISTS
        FOR (p:Project) ON (p.embedding)
+      OPTIONS {indexConfig: {`vector.dimensions`: 3072, `vector.similarity_function`: 'cosine'}}""",
+    """CREATE VECTOR INDEX presentation_embedding IF NOT EXISTS
+       FOR (pr:Presentation) ON (pr.embedding)
+      OPTIONS {indexConfig: {`vector.dimensions`: 3072, `vector.similarity_function`: 'cosine'}}""",
+    """CREATE VECTOR INDEX chunk_embedding IF NOT EXISTS
+       FOR (ch:TranscriptChunk) ON (ch.embedding)
       OPTIONS {indexConfig: {`vector.dimensions`: 3072, `vector.similarity_function`: 'cosine'}}""",
 ]
 

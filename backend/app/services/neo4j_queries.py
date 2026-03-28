@@ -31,7 +31,7 @@ async def get_full_graph(driver: AsyncDriver) -> dict[str, list[dict]]:
             """
             MATCH (n)
             WHERE n:Session OR n:Speaker OR n:Organization OR n:Topic
-                  OR n:Technology OR n:Concept OR n:Project
+                  OR n:Technology OR n:Concept OR n:Project OR n:Presentation
             RETURN n.id AS id, labels(n)[0] AS label, n.name AS name,
                    properties(n) AS props
             """
@@ -39,8 +39,11 @@ async def get_full_graph(driver: AsyncDriver) -> dict[str, list[dict]]:
         records = await result.data()
         for rec in records:
             props = dict(rec.get("props") or {})
-            # Strip embedding vectors — too large for the frontend
+            # Strip large fields — too heavy for the frontend
             props.pop("embedding", None)
+            props.pop("transcript", None)
+            props.pop("summary_text", None)
+            props.pop("content", None)
             nodes.append(
                 {
                     "id": rec["id"],
@@ -50,10 +53,15 @@ async def get_full_graph(driver: AsyncDriver) -> dict[str, list[dict]]:
                 }
             )
 
-        # Relationships
+        # Relationships — only between nodes we've already selected
+        node_ids = {n["id"] for n in nodes}
         result = await session.run(
             """
             MATCH (a)-[r]->(b)
+            WHERE (a:Session OR a:Speaker OR a:Organization OR a:Topic
+                   OR a:Technology OR a:Concept OR a:Project OR a:Presentation)
+              AND (b:Session OR b:Speaker OR b:Organization OR b:Topic
+                   OR b:Technology OR b:Concept OR b:Project OR b:Presentation)
             RETURN a.id AS source, b.id AS target, type(r) AS type,
                    properties(r) AS props
             """
@@ -86,7 +94,7 @@ async def vector_search(
                 CALL db.index.vector.queryNodes($index_name, $top_k, $embedding)
                 YIELD node, score
                 RETURN node.id AS id, node.name AS name, labels(node)[0] AS label,
-                       coalesce(node.summary, node.description, '') AS context, score
+                       coalesce(node.summary, node.description, node.content, '') AS context, score
                 """,
                 index_name=index_name,
                 top_k=top_k,

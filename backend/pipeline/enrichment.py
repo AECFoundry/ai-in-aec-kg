@@ -52,13 +52,15 @@ def enrich_graph(
     sessions_data: list[dict],
     entities: list[Entity],
     relationships: list[Relationship],
+    presentations_data: list[dict] | None = None,
 ) -> tuple[list[Entity], list[Relationship]]:
     """Enrich the graph with spaCy NER and KeyBERT keywords.
 
-    Args:
-        sessions_data: List of session dicts (from parser, with live_text and summary_text).
-        entities: Current entity list.
-        relationships: Current relationship list.
+    Processes:
+    - Session live_text for NER
+    - Presentation formatted transcripts for NER
+    - Session summaries for KeyBERT
+    - Presentation transcripts for KeyBERT (richer than summaries alone)
 
     Returns:
         Enriched entities and relationships.
@@ -78,11 +80,44 @@ def enrich_graph(
     new_entities: list[Entity] = []
     new_relationships: list[Relationship] = []
 
-    # --- spaCy NER enrichment ---
+    def _add_ner_entity(name: str, entity_type: str, source_id: str, session_number: int | None):
+        """Add NER-discovered entity and MENTIONS relationship."""
+        name = name.strip()
+        if len(name) < 3 or len(name) > 80:
+            return
+        if _entity_exists(name, entity_index):
+            return
+
+        eid = _make_entity_id(entity_type, name)
+        if eid in entity_index:
+            existing = entity_index[eid]
+            if session_number and session_number not in existing.source_sessions:
+                existing.source_sessions.append(session_number)
+            return
+
+        source_sessions = [session_number] if session_number else []
+        new_entity = Entity(
+            id=eid,
+            name=name,
+            type=entity_type,
+            description=f"{name} ({entity_type}, discovered via NER)",
+            source_sessions=source_sessions,
+        )
+        entity_index[eid] = new_entity
+        new_entities.append(new_entity)
+
+        new_relationships.append(Relationship(
+            source_id=source_id,
+            target_id=eid,
+            type="MENTIONS",
+            description=f"{source_id} mentions {name}",
+            properties={"source": "spacy_ner"},
+        ))
+
+    # --- spaCy NER on session live_text ---
     for session_dict in sessions_data:
         session_number = session_dict["session_number"]
         live_text = session_dict.get("live_text", "")
-        # Process live_text through spaCy (limit length for performance)
         text = live_text[:10000] if live_text else ""
         if not text:
             continue
@@ -93,45 +128,40 @@ def enrich_graph(
         for ent in doc.ents:
             if ent.label_ not in SPACY_LABEL_MAP:
                 continue
-            name = ent.text.strip()
-            if len(name) < 3 or len(name) > 80:
-                continue
-            entity_type = SPACY_LABEL_MAP[ent.label_]
+            _add_ner_entity(ent.text, SPACY_LABEL_MAP[ent.label_], session_id, session_number)
 
-            if _entity_exists(name, entity_index):
-                continue
-
-            eid = _make_entity_id(entity_type, name)
-            if eid in entity_index:
-                # Update source sessions
-                existing = entity_index[eid]
-                if session_number not in existing.source_sessions:
-                    existing.source_sessions.append(session_number)
+    # --- spaCy NER on presentation transcripts ---
+    pres_ner_count = 0
+    if presentations_data:
+        for pres in presentations_data:
+            pres_id = pres.get("id", "")
+            transcript = pres.get("transcript", "")
+            if not transcript or len(transcript) < 50:
                 continue
 
-            new_entity = Entity(
-                id=eid,
-                name=name,
-                type=entity_type,
-                description=(
-                    f"{name} ({entity_type}, discovered"
-                    f" via NER from session {session_number})"
-                ),
-                source_sessions=[session_number],
-            )
-            entity_index[eid] = new_entity
-            new_entities.append(new_entity)
+            # Process full transcript (formatted, so cleaner than raw live_text)
+            doc = nlp(transcript[:15000])
+            session_id = pres.get("session_id", "")
+            # Extract session number from session_id
+            session_number = None
+            if session_id.startswith("session_"):
+                try:
+                    session_number = int(session_id.split("_")[1])
+                except (IndexError, ValueError):
+                    pass
 
-            # Relate to session
-            new_relationships.append(Relationship(
-                source_id=session_id,
-                target_id=eid,
-                type="MENTIONS",
-                description=f"Session {session_number} mentions {name}",
-                properties={"source": "spacy_ner"},
-            ))
+            before = len(new_entities)
+            for ent in doc.ents:
+                if ent.label_ not in SPACY_LABEL_MAP:
+                    continue
+                _add_ner_entity(ent.text, SPACY_LABEL_MAP[ent.label_], pres_id, session_number)
+            pres_ner_count += len(new_entities) - before
 
-    logger.info("spaCy NER found %d new entities", len(new_entities))
+    logger.info(
+        "spaCy NER found %d new entities (%d from presentation transcripts)",
+        len(new_entities),
+        pres_ner_count,
+    )
 
     # --- KeyBERT keyword extraction ---
     try:
@@ -139,30 +169,22 @@ def enrich_graph(
 
         kw_model = KeyBERT()
 
-        for session_dict in sessions_data:
-            session_number = session_dict["session_number"]
-            summary_text = session_dict.get("summary_text", "")
-            if not summary_text or len(summary_text) < 50:
-                continue
-
+        def _extract_topics(text: str, source_id: str, session_number: int | None, top_n: int = 5):
+            """Extract keywords from text and create Topic entities + relationships."""
+            if not text or len(text) < 50:
+                return
             try:
                 keywords = kw_model.extract_keywords(
-                    summary_text,
+                    text,
                     keyphrase_ngram_range=(1, 3),
                     stop_words="english",
-                    top_n=5,
+                    top_n=top_n,
                     use_maxsum=True,
                     nr_candidates=20,
                 )
             except Exception as exc:
-                logger.warning(
-                    "KeyBERT extraction failed for session %d: %s",
-                    session_number,
-                    exc,
-                )
-                continue
-
-            session_id = f"session_{session_number}"
+                logger.warning("KeyBERT extraction failed for %s: %s", source_id, exc)
+                return
 
             for keyword, score in keywords:
                 keyword = keyword.strip()
@@ -170,29 +192,63 @@ def enrich_graph(
                     continue
                 tid = _make_entity_id("topic", keyword)
                 if tid not in entity_index:
+                    source_sessions = [session_number] if session_number else []
                     topic_entity = Entity(
                         id=tid,
                         name=keyword.title(),
                         type="Topic",
-                        description=f"Keyword topic extracted from session {session_number}",
-                        source_sessions=[session_number],
+                        description=f"Keyword topic extracted from {source_id}",
+                        source_sessions=source_sessions,
                     )
                     entity_index[tid] = topic_entity
                     new_entities.append(topic_entity)
                 else:
                     existing = entity_index[tid]
-                    if session_number not in existing.source_sessions:
+                    if session_number and session_number not in existing.source_sessions:
                         existing.source_sessions.append(session_number)
 
                 new_relationships.append(Relationship(
-                    source_id=session_id,
+                    source_id=source_id,
                     target_id=tid,
                     type="COVERS_TOPIC",
                     description=f"Keyword '{keyword}' (score={score:.2f})",
                     properties={"source": "keybert", "score": round(score, 3)},
                 ))
 
-        logger.info("KeyBERT added topics, total new entities: %d", len(new_entities))
+        # KeyBERT on session summaries
+        for session_dict in sessions_data:
+            session_number = session_dict["session_number"]
+            summary_text = session_dict.get("summary_text", "")
+            session_id = f"session_{session_number}"
+            _extract_topics(summary_text, session_id, session_number)
+
+        # KeyBERT on presentation transcripts (richer source than summaries)
+        if presentations_data:
+            for pres in presentations_data:
+                pres_id = pres.get("id", "")
+                # Use transcript if available, fall back to summary
+                text = pres.get("transcript", "") or pres.get("summary", "")
+                if not text:
+                    continue
+
+                session_id = pres.get("session_id", "")
+                session_number = None
+                if session_id.startswith("session_"):
+                    try:
+                        session_number = int(session_id.split("_")[1])
+                    except (IndexError, ValueError):
+                        pass
+
+                # More keywords for longer transcripts
+                top_n = 8 if len(text) > 500 else 5
+                _extract_topics(text, pres_id, session_number, top_n=top_n)
+
+            logger.info(
+                "KeyBERT processed %d presentations",
+                len(presentations_data),
+            )
+
+        logger.info("KeyBERT enrichment complete, total new entities: %d", len(new_entities))
 
     except ImportError:
         logger.warning("KeyBERT not available, skipping keyword extraction")
@@ -205,10 +261,14 @@ def enrich_graph(
 def enrich(
     sessions_data: list[dict],
     extraction_result: ExtractionResult,
+    presentations_data: list[dict] | None = None,
 ) -> ExtractionResult:
     """Convenience wrapper that takes and returns an ExtractionResult."""
     entities, relationships = enrich_graph(
-        sessions_data, extraction_result.entities, extraction_result.relationships
+        sessions_data,
+        extraction_result.entities,
+        extraction_result.relationships,
+        presentations_data=presentations_data,
     )
     return ExtractionResult(entities=entities, relationships=relationships)
 

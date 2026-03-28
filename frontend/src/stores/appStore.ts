@@ -14,6 +14,7 @@ interface AppState {
   isLoading: boolean;
   setSidebarOpen: (open: boolean) => void;
   addMessage: (msg: ChatMessage) => void;
+  updateMessage: (id: string, partial: Partial<ChatMessage>) => void;
   setMessages: (msgs: ChatMessage[]) => void;
   setLoading: (loading: boolean) => void;
 
@@ -24,6 +25,16 @@ interface AppState {
   highlightedLinks: Set<string>;
   setHighlight: (nodes: string[], links: string[]) => void;
   clearHighlight: () => void;
+
+  // Linked selection
+  flyToNodeId: string | null;
+  scrollToNodeId: string | null;
+  collapsedGroups: Set<string>;
+  setFlyToNodeId: (id: string | null) => void;
+  setScrollToNodeId: (id: string | null) => void;
+  toggleGroupCollapsed: (group: string) => void;
+  focusNode: (nodeId: string) => void;
+  focusSubgraph: (nodeIds: string[], linkIds: string[]) => void;
 
   // Selection
   selectedNode: GraphNode | null;
@@ -60,6 +71,12 @@ export const useAppStore = create<AppState>()((set) => ({
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   addMessage: (msg) =>
     set((state) => ({ messages: [...state.messages, msg] })),
+  updateMessage: (id, partial) =>
+    set((state) => ({
+      messages: state.messages.map((m) =>
+        m.id === id ? { ...m, ...partial } : m
+      ),
+    })),
   setMessages: (msgs) => set({ messages: msgs }),
   setLoading: (loading) => set({ isLoading: loading }),
 
@@ -77,6 +94,37 @@ export const useAppStore = create<AppState>()((set) => ({
     set({
       highlightedNodes: new Set<string>(),
       highlightedLinks: new Set<string>(),
+      flyToNodeId: null,
+      scrollToNodeId: null,
+    }),
+
+  // Linked selection
+  flyToNodeId: null,
+  scrollToNodeId: null,
+  collapsedGroups: new Set<string>([
+    "Session", "Presentation", "Speaker", "Organization",
+    "Topic", "Technology", "Concept", "Project",
+  ]),
+  setFlyToNodeId: (id) => set({ flyToNodeId: id }),
+  setScrollToNodeId: (id) => set({ scrollToNodeId: id }),
+  toggleGroupCollapsed: (group) =>
+    set((state) => {
+      const next = new Set(state.collapsedGroups);
+      if (next.has(group)) next.delete(group);
+      else next.add(group);
+      return { collapsedGroups: next };
+    }),
+  focusNode: (nodeId) =>
+    set({
+      highlightedNodes: new Set([nodeId]),
+      highlightedLinks: new Set<string>(),
+      scrollToNodeId: nodeId,
+      flyToNodeId: nodeId,
+    }),
+  focusSubgraph: (nodeIds, linkIds) =>
+    set({
+      highlightedNodes: new Set(nodeIds),
+      highlightedLinks: new Set(linkIds),
     }),
 
   // Selection

@@ -48,12 +48,12 @@ async def get_neo4j_driver() -> AsyncDriver:
 # ---------------------------------------------------------------------------
 
 def init_openai_client() -> AsyncOpenAI:
-    """Create and return the AsyncOpenAI client pointed at OpenRouter."""
+    """Create and return the AsyncOpenAI client (OpenRouter or direct OpenAI)."""
     global _openai_client
     settings = get_settings()
     _openai_client = AsyncOpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=settings.OPENROUTER_API_KEY,
+        base_url=settings.llm_base_url,
+        api_key=settings.llm_api_key,
     )
     return _openai_client
 

@@ -117,10 +117,14 @@ def _extract_session(
     client: OpenAI,
     session: SessionChunk,
     *,
-    model: str = "google/gemini-2.5-flash",
+    model: str = "",
     max_retries: int = 2,
 ) -> dict:
     """Send a session summary to the LLM for entity/relationship extraction."""
+    if not model:
+        from pipeline.llm_utils import resolve_model
+        model = resolve_model("google/gemini-2.5-flash")
+
     speaker_names = ", ".join(
         f"{s.name} ({s.organization})" for s in session.speakers
     ) or "Unknown"
@@ -236,9 +240,13 @@ def extract_all(
     sessions: list[SessionChunk],
     client: OpenAI,
     *,
-    model: str = "google/gemini-2.5-flash",
+    model: str = "",
 ) -> ExtractionResult:
     """Run extraction across all sessions and merge results."""
+    if not model:
+        from pipeline.llm_utils import resolve_model
+        model = resolve_model("google/gemini-2.5-flash")
+
     # Build structural entities from parsed data
     entities, relationships = _build_structural_nodes(sessions)
     entity_index: dict[str, Entity] = {e.id: e for e in entities}
@@ -382,9 +390,11 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     sessions = parse_transcripts(source)
 
+    from pipeline.llm_utils import get_api_key, get_base_url
+
     client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=os.environ["OPENROUTER_API_KEY"],
+        base_url=get_base_url(),
+        api_key=get_api_key(),
     )
 
     result = extract_all(sessions, client)

@@ -9,13 +9,15 @@ from typing import Any
 
 import neo4j
 
+from pipeline.embedder import TranscriptChunk
 from pipeline.extractor import Entity, ExtractionResult, Relationship
+from pipeline.presentation_extractor import Presentation
 from pipeline.schema import create_schema
 
 logger = logging.getLogger(__name__)
 
 # Valid Neo4j labels (must start with letter, contain only alphanum/underscore)
-VALID_LABELS = {"Session", "Speaker", "Organization", "Topic", "Technology", "Concept", "Project"}
+VALID_LABELS = {"Session", "Speaker", "Organization", "Topic", "Technology", "Concept", "Project", "Presentation", "TranscriptChunk"}
 
 
 def _sanitize_label(label: str) -> str:
@@ -125,12 +127,165 @@ async def _load_relationships(
             )
 
 
+async def _load_presentations(
+    session: neo4j.AsyncSession,
+    presentations: list[Presentation],
+    embeddings: dict[str, list[float]],
+) -> None:
+    """Load presentation nodes and their relationships into Neo4j."""
+    # Remove stale Presentation nodes not in the current batch to avoid
+    # duplicates when the LLM produces slightly different titles across runs.
+    current_ids = [p.id for p in presentations]
+    try:
+        result = await session.run(
+            "MATCH (p:Presentation) WHERE NOT p.id IN $ids "
+            "DETACH DELETE p RETURN count(p) AS deleted",
+            ids=current_ids,
+        )
+        record = await result.single()
+        deleted = record["deleted"] if record else 0
+        if deleted:
+            logger.info("Removed %d stale Presentation nodes from previous runs", deleted)
+    except Exception as exc:
+        logger.warning("Failed to clean stale presentations: %s", exc)
+
+    for pres in presentations:
+        props: dict[str, Any] = {
+            "name": pres.title,
+            "title": pres.title,
+            "summary": pres.summary,
+            "description": pres.summary[:500],
+            "order": pres.order,
+            "session_id": pres.session_id,
+        }
+        if pres.transcript:
+            props["transcript"] = pres.transcript
+        embedding = embeddings.get(pres.id)
+        if embedding:
+            props["embedding"] = embedding
+
+        # Create Presentation node
+        try:
+            await session.run(
+                "MERGE (n:Presentation {id: $id}) SET n += $props",
+                id=pres.id,
+                props=props,
+            )
+        except Exception as exc:
+            logger.error("Failed to load presentation %s: %s", pres.id, exc)
+            continue
+
+        # PART_OF -> Session
+        try:
+            await session.run(
+                "MATCH (p:Presentation {id: $pres_id}), (s:Session {id: $sess_id}) "
+                "MERGE (p)-[r:PART_OF]->(s) SET r.order = $order",
+                pres_id=pres.id,
+                sess_id=pres.session_id,
+                order=pres.order,
+            )
+        except Exception as exc:
+            logger.warning("Failed to link presentation %s -> %s: %s", pres.id, pres.session_id, exc)
+
+        # PRESENTED_BY -> Speaker (fuzzy match by name)
+        for speaker_name in pres.speakers:
+            # Find speaker node by case-insensitive name match
+            try:
+                result = await session.run(
+                    "MATCH (sp:Speaker) WHERE toLower(sp.name) = toLower($name) RETURN sp.id AS id LIMIT 1",
+                    name=speaker_name,
+                )
+                record = await result.single()
+                if record:
+                    await session.run(
+                        "MATCH (p:Presentation {id: $pres_id}), (sp:Speaker {id: $speaker_id}) "
+                        "MERGE (p)-[:PRESENTED_BY]->(sp)",
+                        pres_id=pres.id,
+                        speaker_id=record["id"],
+                    )
+            except Exception as exc:
+                logger.warning("Failed to link presentation to speaker %s: %s", speaker_name, exc)
+
+
+async def _load_transcript_chunks(
+    session: neo4j.AsyncSession,
+    chunks: list[TranscriptChunk],
+    embeddings: dict[str, list[float]],
+) -> None:
+    """Load transcript chunk nodes and CHUNK_OF relationships."""
+    for chunk in chunks:
+        props: dict[str, Any] = {
+            "name": f"Chunk {chunk.chunk_index + 1}/{chunk.total_chunks}",
+            "content": chunk.content,
+            "chunk_index": chunk.chunk_index,
+            "total_chunks": chunk.total_chunks,
+            "presentation_id": chunk.presentation_id,
+            "session_id": chunk.session_id,
+        }
+        embedding = embeddings.get(chunk.id)
+        if embedding:
+            props["embedding"] = embedding
+
+        try:
+            await session.run(
+                "MERGE (n:TranscriptChunk {id: $id}) SET n += $props",
+                id=chunk.id,
+                props=props,
+            )
+        except Exception as exc:
+            logger.error("Failed to load chunk %s: %s", chunk.id, exc)
+            continue
+
+        # CHUNK_OF -> Presentation
+        try:
+            await session.run(
+                "MATCH (c:TranscriptChunk {id: $chunk_id}), (p:Presentation {id: $pres_id}) "
+                "MERGE (c)-[r:CHUNK_OF]->(p) SET r.chunk_index = $idx",
+                chunk_id=chunk.id,
+                pres_id=chunk.presentation_id,
+                idx=chunk.chunk_index,
+            )
+        except Exception as exc:
+            logger.warning("Failed to link chunk %s -> %s: %s", chunk.id, chunk.presentation_id, exc)
+
+
+async def _link_orphans_to_sessions(session: neo4j.AsyncSession) -> None:
+    """Ensure every entity with source_sessions has at least one link to a Session.
+
+    Entities may be extracted or enriched from sessions/presentations but end up
+    with no relationship path back to any Session node.  This creates MENTIONS
+    links so the graph has no disconnected subgraphs.
+    """
+    result = await session.run(
+        """
+        MATCH (n)
+        WHERE n.source_sessions IS NOT NULL
+          AND size(n.source_sessions) > 0
+          AND NOT n:Session
+          AND NOT n:Presentation
+        WITH n
+        WHERE NOT exists { MATCH (n)-[]-(:Session) }
+        UNWIND n.source_sessions AS snum
+        WITH n, "session_" + toString(snum) AS sid
+        MATCH (s:Session {id: sid})
+        MERGE (s)-[r:MENTIONS]->(n)
+        RETURN count(r) AS created
+        """
+    )
+    record = await result.single()
+    count = record["created"] if record else 0
+    if count:
+        logger.info("Created %d MENTIONS links for orphaned entities", count)
+
+
 async def load_graph(
     driver: neo4j.AsyncDriver,
     sessions_data: list[dict],
     entities: list[Entity],
     relationships: list[Relationship],
     embeddings: dict[str, list[float]],
+    presentations: list[Presentation] | None = None,
+    transcript_chunks: list[TranscriptChunk] | None = None,
 ) -> None:
     """Load the full graph into Neo4j.
 
@@ -150,9 +305,33 @@ async def load_graph(
         logger.info("Loading %d entity nodes...", len(non_session_entities))
         await _load_nodes(session, non_session_entities, embeddings)
 
-        # 4. Load relationships
+        # 4. Load presentations (before relationships so enrichment links resolve)
+        if presentations:
+            logger.info("Loading %d presentations...", len(presentations))
+            await _load_presentations(session, presentations, embeddings)
+
+        # 5. Load transcript chunks
+        if transcript_chunks:
+            logger.info("Loading %d transcript chunks...", len(transcript_chunks))
+            await _load_transcript_chunks(session, transcript_chunks, embeddings)
+
+        # 6. Load relationships
         logger.info("Loading %d relationships...", len(relationships))
         await _load_relationships(session, relationships)
+
+        # 7. Ensure every entity is linked to its source session(s)
+        logger.info("Linking orphaned entities to source sessions...")
+        await _link_orphans_to_sessions(session)
+
+        # 8. Remove fully disconnected nodes (e.g. topics orphaned by stale presentation cleanup)
+        result = await session.run(
+            "MATCH (n) WHERE NOT exists { MATCH (n)-[]-() } "
+            "DELETE n RETURN count(n) AS deleted"
+        )
+        record = await result.single()
+        orphan_count = record["deleted"] if record else 0
+        if orphan_count:
+            logger.info("Removed %d fully disconnected nodes", orphan_count)
 
     logger.info("Graph loading complete")
 
@@ -162,6 +341,8 @@ def run_load(
     entities: list[Entity],
     relationships: list[Relationship],
     embeddings: dict[str, list[float]],
+    presentations: list[Presentation] | None = None,
+    transcript_chunks: list[TranscriptChunk] | None = None,
     *,
     neo4j_uri: str = "bolt://localhost:7687",
     neo4j_user: str = "neo4j",
@@ -175,7 +356,7 @@ def run_load(
             auth=(neo4j_user, neo4j_password),
         )
         try:
-            await load_graph(driver, sessions_data, entities, relationships, embeddings)
+            await load_graph(driver, sessions_data, entities, relationships, embeddings, presentations, transcript_chunks)
         finally:
             await driver.close()
 

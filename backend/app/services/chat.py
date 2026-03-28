@@ -4,6 +4,7 @@ import logging
 
 from openai import AsyncOpenAI
 
+from app.config import get_settings
 from app.models.schemas import ChatMessage
 
 logger = logging.getLogger(__name__)
@@ -52,8 +53,9 @@ async def compact_if_needed(user_id: str, openai_client: AsyncOpenAI) -> None:
     )
 
     try:
+        settings = get_settings()
         response = await openai_client.chat.completions.create(
-            model="openai/gpt-4.1",
+            model=settings.resolve_model("openai/gpt-4.1"),
             messages=[
                 {
                     "role": "system",

@@ -1,6 +1,7 @@
 import { useAppStore } from "./stores/appStore";
 import { useSession } from "./hooks/useSession";
 import { useChat } from "./hooks/useChat";
+import LeftSidebar from "./components/LeftSidebar";
 import GraphCanvas from "./components/GraphCanvas";
 import ChatSidebar from "./components/ChatSidebar";
 import ChatInput from "./components/ChatInput";
@@ -11,20 +12,28 @@ export default function App() {
   useSession();
 
   const sidebarOpen = useAppStore((s) => s.sidebarOpen);
+  const graphData = useAppStore((s) => s.graphData);
   const { sendMessage } = useChat();
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#000011]">
+      {/* Left sidebar — node/relationship browser */}
+      <LeftSidebar />
+
       {/* 3D Force Graph */}
       <GraphCanvas />
 
-      {/* Floating chat input at bottom center (visible when sidebar is closed) */}
-      {!sidebarOpen && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 w-full max-w-xl px-4">
-          <div className="relative">
-            {/* Subtle glow behind input */}
-            <div className="absolute inset-0 -z-10 rounded-2xl bg-indigo-500/5 blur-xl" />
-            <ChatInput onSubmit={sendMessage} />
+      {/* Floating chat input (centered in graph area when chat sidebar is closed) */}
+      {!sidebarOpen && graphData && (
+        <div
+          className="fixed bottom-8 z-30"
+          style={{ left: "320px", width: "calc(100% - 320px)" }}
+        >
+          <div className="flex justify-center px-4">
+            <div className="relative w-full max-w-xl">
+              <div className="absolute inset-0 -z-10 rounded-2xl bg-indigo-500/5 blur-xl" />
+              <ChatInput onSubmit={sendMessage} />
+            </div>
           </div>
           <p className="text-center text-[11px] text-slate-600 mt-3 tracking-wider">
             Explore the AI in AEC conference knowledge graph

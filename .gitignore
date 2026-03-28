@@ -11,5 +11,7 @@ __pycache__/
 .venv/
 neo4j_data/
 **/pipeline_cache/
+!backend/data/seed/
 *.db
 .DS_Store
+.claude/

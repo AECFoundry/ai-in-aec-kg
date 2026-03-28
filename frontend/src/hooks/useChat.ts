@@ -1,72 +1,109 @@
 import { useCallback } from "react";
-import { sendMessage as apiSendMessage } from "../lib/api";
+import { sendMessageStream, type SSEEvent } from "../lib/api";
 import { useAppStore } from "../stores/appStore";
+import type { AgentTraceStep } from "../lib/types";
+
+let msgCounter = 0;
 
 export function useChat() {
-  const token = useAppStore((s) => s.token);
-  const addMessage = useAppStore((s) => s.addMessage);
-  const setLoading = useAppStore((s) => s.setLoading);
-  const setSidebarOpen = useAppStore((s) => s.setSidebarOpen);
-  const setHighlight = useAppStore((s) => s.setHighlight);
-  const setShowSignup = useAppStore((s) => s.setShowSignup);
-  const setPendingQuestion = useAppStore((s) => s.setPendingQuestion);
   const isLoading = useAppStore((s) => s.isLoading);
 
-  const sendMessage = useCallback(
-    async (text: string) => {
-      const trimmed = text.trim();
-      if (!trimmed) return;
+  const sendMessage = useCallback(async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
 
-      // If not authenticated, save the question and show signup
-      if (!token) {
-        setPendingQuestion(trimmed);
-        setShowSignup(true);
-        return;
-      }
-
-      // Add user message
-      addMessage({ role: "user", content: trimmed });
-      setSidebarOpen(true);
-      setLoading(true);
-
-      try {
-        const response = await apiSendMessage(trimmed, token);
-
-        addMessage({
-          role: "assistant",
-          content: response.answer,
-          subgraph: response.subgraph,
-          sources: response.sources,
-        });
-
-        // Update highlighted subgraph
-        if (response.subgraph) {
-          setHighlight(
-            response.subgraph.node_ids ?? [],
-            response.subgraph.link_ids ?? []
-          );
-        }
-      } catch (err) {
-        console.error("Chat error:", err);
-        addMessage({
-          role: "assistant",
-          content:
-            "Sorry, something went wrong. Please try again.",
-        });
-      } finally {
-        setLoading(false);
-      }
-    },
-    [
+    const {
       token,
       addMessage,
+      updateMessage,
       setLoading,
       setSidebarOpen,
-      setHighlight,
+      focusSubgraph,
       setShowSignup,
       setPendingQuestion,
-    ]
-  );
+    } = useAppStore.getState();
+
+    if (!token) {
+      setPendingQuestion(trimmed);
+      setShowSignup(true);
+      return;
+    }
+
+    addMessage({ role: "user", content: trimmed });
+    setSidebarOpen(true);
+    setLoading(true);
+
+    // Create a placeholder streaming message
+    const msgId = `assistant-${++msgCounter}`;
+    addMessage({
+      id: msgId,
+      role: "assistant",
+      content: "",
+      agentTrace: [],
+      isStreaming: true,
+    });
+
+    let contentSoFar = "";
+    const trace: AgentTraceStep[] = [];
+
+    try {
+      await sendMessageStream(trimmed, token, (event: SSEEvent) => {
+        const { updateMessage: update, focusSubgraph: focus } =
+          useAppStore.getState();
+
+        switch (event.event) {
+          case "thinking":
+          case "tool_call":
+          case "tool_progress":
+          case "tool_result": {
+            trace.push({
+              type: event.data.type as AgentTraceStep["type"],
+              tool: "tool" in event.data ? event.data.tool : undefined,
+              detail: event.data.detail,
+            });
+            update(msgId, { agentTrace: [...trace] });
+            break;
+          }
+          case "token": {
+            contentSoFar += event.data.content;
+            update(msgId, { content: contentSoFar });
+            break;
+          }
+          case "done": {
+            const { answer, subgraph, sources } = event.data;
+            update(msgId, {
+              content: answer,
+              subgraph: subgraph,
+              sources: sources,
+              isStreaming: false,
+            });
+            if (subgraph) {
+              focus(
+                subgraph.node_ids ?? [],
+                subgraph.link_ids ?? [],
+              );
+            }
+            break;
+          }
+          case "error": {
+            update(msgId, {
+              content: "Sorry, something went wrong. Please try again.",
+              isStreaming: false,
+            });
+            break;
+          }
+        }
+      });
+    } catch (err) {
+      console.error("Chat stream error:", err);
+      useAppStore.getState().updateMessage(msgId, {
+        content: "Sorry, something went wrong. Please try again.",
+        isStreaming: false,
+      });
+    } finally {
+      useAppStore.getState().setLoading(false);
+    }
+  }, []);
 
   return { sendMessage, isLoading };
 }

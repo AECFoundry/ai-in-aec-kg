@@ -1,62 +1,333 @@
-import { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useMemo, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { useAppStore } from "../stores/appStore";
 import { useChat } from "../hooks/useChat";
+import { nodeColors } from "../styles/theme";
 import ChatInput from "./ChatInput";
-import type { ChatMessage } from "../lib/types";
+import type { ChatMessage, SourceRef, AgentTraceStep } from "../lib/types";
+
+const PROSE_CLASSES =
+  "prose prose-invert prose-sm max-w-none " +
+  "[&_p]:my-1.5 [&_ul]:my-1.5 [&_ol]:my-1.5 [&_li]:my-0.5 " +
+  "[&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-slate-200 [&_h3]:mt-3 [&_h3]:mb-1 " +
+  "[&_h4]:text-xs [&_h4]:font-semibold [&_h4]:text-slate-300 [&_h4]:mt-2 [&_h4]:mb-1 " +
+  "[&_strong]:text-slate-100 [&_em]:text-slate-300 " +
+  "[&_code]:text-indigo-300 [&_code]:bg-white/5 [&_code]:px-1 [&_code]:rounded " +
+  "[&_pre]:bg-white/5 [&_pre]:rounded-lg [&_pre]:p-3 " +
+  "[&_a]:text-indigo-400 [&_blockquote]:border-indigo-500/30 [&_blockquote]:text-slate-400 " +
+  "[&_hr]:border-white/[0.06]";
+
+const CITE_RE = /\[(\d+)\]/g;
+
+/** Turn a string into an array of text fragments and citation buttons. */
+function injectCitations(
+  text: string,
+  citeMap: Map<number, SourceRef>,
+  onCiteClick: (id: string) => void,
+  keyPrefix: string,
+): ReactNode[] {
+  const parts: ReactNode[] = [];
+  let last = 0;
+  let match: RegExpExecArray | null;
+  CITE_RE.lastIndex = 0;
+  while ((match = CITE_RE.exec(text)) !== null) {
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    const n = parseInt(match[1]);
+    const source = citeMap.get(n);
+    if (source) {
+      const color = nodeColors[source.label] ?? "#6366f1";
+      parts.push(
+        <button
+          key={`${keyPrefix}-${match.index}`}
+          onClick={() => onCiteClick(source.id)}
+          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 mx-0.5 rounded text-[11px] font-medium align-baseline transition-all duration-150 hover:brightness-125 cursor-pointer"
+          style={{
+            backgroundColor: `${color}20`,
+            color: color,
+            border: `1px solid ${color}30`,
+          }}
+          title={`${source.name} (${source.label})`}
+        >
+          {n}
+        </button>,
+      );
+    } else {
+      parts.push(match[0]);
+    }
+    last = CITE_RE.lastIndex;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
+
+/** Process React children, replacing string [N] text with citation buttons. */
+function processChildren(
+  children: ReactNode,
+  citeMap: Map<number, SourceRef>,
+  onCiteClick: (id: string) => void,
+  keyPrefix: string,
+): ReactNode {
+  return React.Children.map(children, (child, i) => {
+    if (typeof child === "string") {
+      const parts = injectCitations(child, citeMap, onCiteClick, `${keyPrefix}-${i}`);
+      return parts.length === 1 ? parts[0] : <>{parts}</>;
+    }
+    return child;
+  });
+}
+
+/**
+ * Renders markdown with clickable citation buttons for [N] markers.
+ * Uses ReactMarkdown's `components` prop to inject buttons into rendered
+ * HTML elements — never modifies ReactMarkdown's string input.
+ */
+function CitedMarkdown({
+  content,
+  sources,
+  onCiteClick,
+}: {
+  content: string;
+  sources: SourceRef[];
+  onCiteClick: (sourceId: string) => void;
+}) {
+  const citeMap = useMemo(() => {
+    const map = new Map<number, SourceRef>();
+    for (const s of sources) {
+      if (s.citation) map.set(s.citation, s);
+    }
+    return map;
+  }, [sources]);
+
+  const components = useMemo(() => {
+    // Build custom renderers for text-containing elements
+    const wrap = (Tag: string) =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ({ children, node, ...rest }: any) =>
+        React.createElement(Tag, rest, processChildren(children, citeMap, onCiteClick, Tag));
+    return {
+      p: wrap("p"),
+      li: wrap("li"),
+      td: wrap("td"),
+      h1: wrap("h1"),
+      h2: wrap("h2"),
+      h3: wrap("h3"),
+      h4: wrap("h4"),
+      strong: wrap("strong"),
+      em: wrap("em"),
+    };
+  }, [citeMap, onCiteClick]);
+
+  return (
+    <div className={PROSE_CLASSES}>
+      <ReactMarkdown components={components}>{content}</ReactMarkdown>
+    </div>
+  );
+}
+
+const traceIcons: Record<AgentTraceStep["type"], ReactNode> = {
+  thinking: (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  ),
+  tool_call: (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  ),
+  tool_progress: (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+    </svg>
+  ),
+  tool_result: (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+};
+
+function AgentTrace({ steps, isStreaming }: { steps: AgentTraceStep[]; isStreaming?: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (steps.length === 0) return null;
+
+  return (
+    <div className={`mb-2 rounded-lg px-2.5 py-1.5 -mx-1 ${isStreaming ? "animate-breathe-glow" : ""}`}>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className={`flex items-center gap-1.5 text-[10px] hover:text-slate-300 transition-colors uppercase tracking-wider font-medium ${
+          isStreaming ? "text-indigo-400" : "text-slate-500"
+        }`}
+      >
+        <motion.svg
+          width="10"
+          height="10"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          animate={{ rotate: expanded ? 90 : 0 }}
+          transition={{ duration: 0.15 }}
+        >
+          <polyline points="9 18 15 12 9 6" />
+        </motion.svg>
+        {isStreaming ? "Reasoning..." : `${steps.length} steps`}
+      </button>
+
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-1.5 ml-1 border-l border-white/[0.06] pl-3 space-y-1">
+              {steps.map((step, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -4 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.15, delay: isStreaming ? 0.05 : 0 }}
+                  className="flex items-start gap-2 text-[11px] text-slate-500"
+                >
+                  <span className={`mt-0.5 shrink-0 ${
+                    step.type === "tool_result"
+                      ? "text-emerald-500/70"
+                      : step.type === "tool_call"
+                        ? "text-indigo-400/70"
+                        : "text-slate-500/70"
+                  }`}>
+                    {traceIcons[step.type]}
+                  </span>
+                  <span className="leading-tight">{step.detail}</span>
+                </motion.div>
+              ))}
+              {isStreaming && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex items-center gap-1.5 text-[11px] text-slate-600"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400/50 animate-pulse" />
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user";
+  const focusNode = useAppStore((s) => s.focusNode);
+  const graphData = useAppStore((s) => s.graphData);
+  const setSelectedNode = useAppStore((s) => s.setSelectedNode);
+  const highlightedNodes = useAppStore((s) => s.highlightedNodes);
+  const clearHighlight = useAppStore((s) => s.clearHighlight);
+
+  const handleSourceClick = (sourceId: string) => {
+    if (highlightedNodes.size === 1 && highlightedNodes.has(sourceId)) {
+      clearHighlight();
+    } else {
+      focusNode(sourceId);
+      // Open card after camera arrives
+      const targetNode = graphData?.nodes.find((n: { id: string }) => n.id === sourceId);
+      if (targetNode) {
+        setTimeout(() => setSelectedNode(targetNode), 1500);
+      }
+    }
+  };
+
+  const sources = message.sources ?? [];
+
+  // Hide empty streaming bubble before first SSE event arrives
+  if (message.isStreaming && !message.content && (!message.agentTrace || message.agentTrace.length === 0)) {
+    return (
+      <div className="flex justify-start mb-4">
+        <div className="bg-white/[0.04] border border-white/[0.06] rounded-2xl rounded-bl-md px-5 py-4">
+          <div className="flex gap-1.5">
+            <span className="w-2 h-2 bg-indigo-400/60 rounded-full animate-bounce [animation-delay:0ms]" />
+            <span className="w-2 h-2 bg-indigo-400/60 rounded-full animate-bounce [animation-delay:150ms]" />
+            <span className="w-2 h-2 bg-indigo-400/60 rounded-full animate-bounce [animation-delay:300ms]" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
       <div
         className={`
-          max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed
+          rounded-2xl px-4 py-3 text-sm leading-relaxed
           ${
             isUser
-              ? "bg-indigo-600/60 text-white rounded-br-md"
-              : "bg-white/[0.04] border border-white/[0.06] text-slate-200 rounded-bl-md"
+              ? "max-w-[85%] bg-indigo-600/60 text-white rounded-br-md"
+              : "w-full bg-white/[0.04] border border-white/[0.06] text-slate-200 rounded-bl-md"
           }
         `}
       >
+        {/* Agent reasoning trace (above assistant content) */}
+        {!isUser && message.agentTrace && message.agentTrace.length > 0 && (
+          <AgentTrace steps={message.agentTrace} isStreaming={message.isStreaming} />
+        )}
+
         {isUser ? (
           <p>{message.content}</p>
+        ) : message.isStreaming && !message.content ? (
+          null
+        ) : sources.length > 0 ? (
+          <CitedMarkdown
+            content={message.content}
+            sources={sources}
+            onCiteClick={handleSourceClick}
+          />
         ) : (
-          <div className="prose prose-invert prose-sm max-w-none [&_p]:my-1.5 [&_ul]:my-1.5 [&_ol]:my-1.5 [&_li]:my-0.5 [&_code]:text-indigo-300 [&_code]:bg-white/5 [&_code]:px-1 [&_code]:rounded [&_pre]:bg-white/5 [&_pre]:rounded-lg [&_pre]:p-3 [&_a]:text-indigo-400">
+          <div className={PROSE_CLASSES}>
             <ReactMarkdown>{message.content}</ReactMarkdown>
           </div>
         )}
 
-        {/* Sources */}
-        {message.sources && message.sources.length > 0 && (
-          <div className="mt-3 pt-2 border-t border-white/[0.06] flex flex-wrap gap-1.5">
-            {message.sources.map((source, i) => (
-              <span
-                key={i}
-                className="inline-block px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300/80 text-[11px] tracking-wide"
-                title={`${source.label} — relevance: ${(source.score * 100).toFixed(0)}%`}
-              >
-                {source.name}
-              </span>
-            ))}
+        {/* Sources footnote list */}
+        {sources.length > 0 && (
+          <div className="mt-3 pt-2 border-t border-white/[0.06] space-y-1">
+            {sources.map((source, i) => {
+              const color = nodeColors[source.label] ?? "#6366f1";
+              return (
+                <button
+                  key={i}
+                  onClick={() => handleSourceClick(source.id)}
+                  className="flex items-center gap-2 w-full text-left px-2 py-1 rounded-lg hover:bg-white/[0.04] transition-colors duration-150 group"
+                >
+                  <span
+                    className="shrink-0 w-5 h-5 flex items-center justify-center rounded text-[10px] font-semibold"
+                    style={{
+                      backgroundColor: `${color}20`,
+                      color: color,
+                    }}
+                  >
+                    {source.citation ?? i + 1}
+                  </span>
+                  <span className="text-[12px] text-slate-400 group-hover:text-slate-200 truncate transition-colors">
+                    {source.name}
+                  </span>
+                  <span className="ml-auto text-[10px] text-slate-600 uppercase tracking-wider shrink-0">
+                    {source.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-function LoadingIndicator() {
-  return (
-    <div className="flex justify-start mb-4">
-      <div className="bg-white/[0.04] border border-white/[0.06] rounded-2xl rounded-bl-md px-5 py-4">
-        <div className="flex gap-1.5">
-          <span className="w-2 h-2 bg-indigo-400/60 rounded-full animate-bounce [animation-delay:0ms]" />
-          <span className="w-2 h-2 bg-indigo-400/60 rounded-full animate-bounce [animation-delay:150ms]" />
-          <span className="w-2 h-2 bg-indigo-400/60 rounded-full animate-bounce [animation-delay:300ms]" />
-        </div>
       </div>
     </div>
   );
@@ -66,6 +337,7 @@ export default function ChatSidebar() {
   const sidebarOpen = useAppStore((s) => s.sidebarOpen);
   const messages = useAppStore((s) => s.messages);
   const isLoading = useAppStore((s) => s.isLoading);
+  const setMessages = useAppStore((s) => s.setMessages);
   const setSidebarOpen = useAppStore((s) => s.setSidebarOpen);
   const clearHighlight = useAppStore((s) => s.clearHighlight);
   const { sendMessage } = useChat();
@@ -78,6 +350,11 @@ export default function ChatSidebar() {
 
   const handleClose = () => {
     setSidebarOpen(false);
+    clearHighlight();
+  };
+
+  const handleClearChat = () => {
+    setMessages([]);
     clearHighlight();
   };
 
@@ -106,29 +383,57 @@ export default function ChatSidebar() {
                 Knowledge Graph Chat
               </p>
             </div>
-            <button
-              onClick={handleClose}
-              className="
-                p-2 rounded-xl
-                hover:bg-white/[0.06]
-                text-slate-400 hover:text-white
-                transition-all duration-200
-              "
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            <div className="flex items-center gap-1">
+              {messages.length > 0 && (
+                <button
+                  onClick={handleClearChat}
+                  title="Clear chat"
+                  className="
+                    p-2 rounded-xl
+                    hover:bg-white/[0.06]
+                    text-slate-500 hover:text-slate-200
+                    transition-all duration-200
+                  "
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z" />
+                  </svg>
+                </button>
+              )}
+              <button
+                onClick={handleClose}
+                className="
+                  p-2 rounded-xl
+                  hover:bg-white/[0.06]
+                  text-slate-400 hover:text-white
+                  transition-all duration-200
+                "
               >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
@@ -159,8 +464,6 @@ export default function ChatSidebar() {
             {messages.map((msg, i) => (
               <MessageBubble key={i} message={msg} />
             ))}
-
-            {isLoading && <LoadingIndicator />}
 
             <div ref={messagesEndRef} />
           </div>

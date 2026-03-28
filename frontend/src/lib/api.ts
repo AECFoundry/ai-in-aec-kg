@@ -1,4 +1,4 @@
-import type { GraphData, ChatResponse, UserInfo, ChatMessage } from "./types";
+import type { GraphData, ChatResponse, UserInfo, ChatMessage, AgentTraceStep } from "./types";
 
 const BASE = "/api";
 
@@ -67,4 +67,65 @@ export async function getChatHistory(token: string): Promise<ChatMessage[]> {
       Authorization: `Bearer ${token}`,
     },
   });
+}
+
+export type SSEEvent =
+  | { event: "thinking"; data: { type: string; detail: string } }
+  | { event: "tool_call"; data: { type: string; tool: string; detail: string } }
+  | { event: "tool_progress"; data: { type: string; tool: string; detail: string } }
+  | { event: "tool_result"; data: { type: string; tool: string; detail: string } }
+  | { event: "token"; data: { content: string } }
+  | { event: "done"; data: ChatResponse }
+  | { event: "error"; data: { detail: string } };
+
+export async function sendMessageStream(
+  message: string,
+  token: string,
+  onEvent: (event: SSEEvent) => void,
+): Promise<void> {
+  const res = await fetch(`${BASE}/chat/stream`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ message }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`API error ${res.status}: ${body}`);
+  }
+
+  const reader = res.body?.getReader();
+  if (!reader) throw new Error("No response body");
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let currentEvent = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      if (line.startsWith("event:")) {
+        currentEvent = line.slice(6).trim();
+      } else if (line.startsWith("data:") && currentEvent) {
+        try {
+          const data = JSON.parse(line.slice(5).trim());
+          onEvent({ event: currentEvent, data } as SSEEvent);
+        } catch {
+          // Skip malformed JSON
+        }
+        currentEvent = "";
+      } else if (line === "") {
+        currentEvent = "";
+      }
+    }
+  }
 }
