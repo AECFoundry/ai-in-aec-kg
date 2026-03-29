@@ -7,7 +7,6 @@ import ChatSidebar from "./components/ChatSidebar";
 import ChatInput from "./components/ChatInput";
 import SignupModal from "./components/SignupModal";
 import NodePopover from "./components/NodePopover";
-import VoiceOrb from "./components/VoiceOrb";
 
 export default function App() {
   useSession();
@@ -36,17 +35,11 @@ export default function App() {
               <ChatInput onSubmit={sendMessage} />
             </div>
           </div>
-          <p className="text-center text-[11px] text-slate-500 mt-3 tracking-wider">
-            Explore the AI in AEC conference knowledge graph
-          </p>
         </div>
       )}
 
       {/* Chat Sidebar */}
       <ChatSidebar />
-
-      {/* Voice Orb */}
-      <VoiceOrb />
 
       {/* Signup Modal */}
       <SignupModal />

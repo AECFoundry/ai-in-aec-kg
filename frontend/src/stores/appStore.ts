@@ -52,8 +52,10 @@ interface AppState {
   // Voice
   voiceState: 'idle' | 'listening' | 'processing' | 'speaking';
   ttsAvailable: boolean;
+  pendingTTS: boolean;
   setVoiceState: (state: 'idle' | 'listening' | 'processing' | 'speaking') => void;
   setTtsAvailable: (available: boolean) => void;
+  setPendingTTS: (pending: boolean) => void;
 }
 
 export type { AppState };
@@ -154,6 +156,8 @@ export const useAppStore = create<AppState>()((set) => ({
   // Voice
   voiceState: 'idle' as const,
   ttsAvailable: false,
+  pendingTTS: false,
   setVoiceState: (state) => set({ voiceState: state }),
   setTtsAvailable: (available) => set({ ttsAvailable: available }),
+  setPendingTTS: (pending) => set({ pendingTTS: pending }),
 }));

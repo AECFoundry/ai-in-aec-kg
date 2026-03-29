@@ -69,3 +69,4 @@ class ChatResponse(BaseModel):
     answer: str
     subgraph: SubgraphHighlight
     sources: list[dict] = []
+    spoken_answer: str = ""

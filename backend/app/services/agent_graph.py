@@ -18,6 +18,24 @@ logger = logging.getLogger(__name__)
 
 TOOL_MAP = {t.name: t for t in ALL_TOOLS}
 
+VOCALIZE_PROMPT = """\
+You are the voice of a warm, knowledgeable AI guide — think Jarvis or Samantha from HER. \
+Transform the written answer below into a natural spoken response for text-to-speech.
+
+**Rules:**
+- Remove ALL citation numbers like [1], [2], [3] — never say numbers in brackets.
+- Remove all markdown formatting (bold, headers, bullets, code blocks).
+- Distill to the key insight in 2-4 short sentences — do not try to cover everything.
+- Sound natural and conversational — use contractions, natural speech rhythm.
+- If the answer covers multiple topics, highlight the most interesting finding.
+- End with a brief, natural prompt inviting deeper exploration — e.g. \
+"Want me to dig into any of that?" or \
+"I can tell you more about the specific projects if you're curious."
+- Never enumerate or list items — weave information into flowing speech.
+- Keep it concise — aim for 3-5 sentences total.
+- Do NOT add any preamble like "Here's the spoken version:" — \
+just output the spoken text directly."""
+
 SYSTEM_PROMPT = """\
 You are an expert assistant for the AI in AEC (Architecture, Engineering, Construction) \
 2026 conference knowledge graph. You answer questions by exploring a Neo4j knowledge graph \
@@ -35,17 +53,44 @@ Presentation nodes store the full formatted transcript in their `transcript` pro
 get_node_details shows a 1500-char preview; use run_cypher_query to fetch the full text \
 when you need comprehensive coverage of a presentation.
 
-**Your approach:**
-1. Start with vector_search_nodes to find semantically relevant nodes. **Always include \
-TranscriptChunk** in your node_types — chunks contain the actual presentation content and \
-are the richest source of detail. Add 1-2 other types relevant to the question (e.g. \
-Presentation, Topic, Speaker). Don't search all 9 types — pick 2-4.
-2. Use get_node_neighbors to explore specific nodes and understand their connections.
-3. Use get_node_details for full information on key nodes.
-4. Use expand_subgraph for broader context around important nodes.
-5. Use find_paths to discover how two concepts are connected.
-6. Use run_cypher_query for quantitative questions (counts, rankings, aggregations, \
-listing all items of a type, etc.). Write read-only Cypher.
+**Graph structure (key relationships):**
+- Session ←[PART_OF]← Presentation ←[CHUNK_OF]← TranscriptChunk
+- Presentation ←[PRESENTED_BY]← Speaker ←[AFFILIATED_WITH]← Organization
+- Presentation →[COVERS_TOPIC]→ Topic, →[MENTIONS_TECHNOLOGY]→ Technology
+- Topic →[SUBTOPIC_OF]→ Topic, Concept →[RELATES_TO]→ Concept
+
+**Choose your strategy based on the query type:**
+
+A) **Entity-navigation** — the user asks about a *specific named entity* and its \
+connections (e.g. "What presentations are in the Computational Design session?", \
+"Who spoke at Session 5?", "What topics does Dr. Smith cover?"):
+   1. Use vector_search_nodes to find the named entity (search the entity's own type — \
+e.g. search Session for "Computational Design", Speaker for "Dr. Smith").
+   2. Use get_node_neighbors on the found node to traverse its direct relationships. \
+Filter by relationship type when the target is clear (e.g. PART_OF for presentations in a session).
+   3. Use get_node_details on the connected nodes for richer information.
+
+B) **Semantic/exploratory** — the user asks an open-ended question about content \
+(e.g. "How is AI being used in structural engineering?", "What was discussed about digital twins?"):
+   1. Start with vector_search_nodes. **Always include TranscriptChunk** in your node_types — \
+chunks contain the actual presentation content and are the richest source of detail. \
+Add 1-2 other types relevant to the question (e.g. Presentation, Topic, Speaker). \
+Don't search all 9 types — pick 2-4.
+   2. Use get_node_neighbors or expand_subgraph to explore context around the best hits.
+   3. Use get_node_details for full information on key nodes.
+
+C) **Quantitative/aggregation** — the user asks for counts, rankings, lists of all items, \
+or comparisons (e.g. "How many sessions are there?", "Which speaker has the most presentations?"):
+   Use run_cypher_query directly. Write read-only Cypher.
+
+**Fallback:** If vector search returns few or no relevant results for a query involving a \
+named entity (session, speaker, organization, etc.), switch to entity-navigation: search \
+for the entity node itself, then traverse its relationships. Do not assume data is missing \
+without trying graph traversal.
+
+**Other tools:**
+- Use find_paths to discover how two specific concepts or entities are connected.
+- Use expand_subgraph for broader context around a cluster of important nodes.
 
 **Rules:**
 - Be efficient: aim for 1-2 rounds of tool calls maximum, then produce your answer.
@@ -252,6 +297,36 @@ async def finalize(state: AgentState) -> dict[str, Any]:
     }
 
 
+async def vocalize(state: AgentState) -> dict[str, Any]:
+    """Convert the written answer to a conversational spoken version for TTS."""
+    writer = get_stream_writer()
+    answer = state.get("answer", "")
+    if not answer:
+        return {"spoken_answer": ""}
+
+    writer({"type": "thinking", "detail": "Preparing voice response..."})
+
+    llm = get_agent_llm()
+    msgs = [
+        SystemMessage(content=VOCALIZE_PROMPT),
+        HumanMessage(content=answer),
+    ]
+
+    spoken_chunks: list[str] = []
+    try:
+        async for chunk in llm.astream(msgs):
+            token = chunk.content if hasattr(chunk, "content") else ""
+            if token:
+                spoken_chunks.append(token)
+                writer({"type": "spoken_token", "content": token})
+    except Exception:
+        logger.exception("Vocalize LLM call failed")
+        return {"spoken_answer": ""}
+
+    spoken_answer = "".join(spoken_chunks)
+    return {"spoken_answer": spoken_answer}
+
+
 def _should_continue(state: AgentState) -> str:
     """Route: tool_calls present → tool_node, otherwise → finalize."""
     last_msg = state["messages"][-1]
@@ -267,10 +342,12 @@ def build_agent_graph() -> Any:
     builder.add_node("llm_call", llm_call)
     builder.add_node("tool_node", tool_node)
     builder.add_node("finalize", finalize)
+    builder.add_node("vocalize", vocalize)
 
     builder.add_edge(START, "llm_call")
     builder.add_conditional_edges("llm_call", _should_continue, ["tool_node", "finalize"])
     builder.add_edge("tool_node", "llm_call")
-    builder.add_edge("finalize", END)
+    builder.add_edge("finalize", "vocalize")
+    builder.add_edge("vocalize", END)
 
     return builder.compile()

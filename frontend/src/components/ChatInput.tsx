@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
+import VoiceOrb from "./VoiceOrb";
 
 interface ChatInputProps {
   onSubmit: (text: string) => void;
@@ -38,7 +39,7 @@ export default function ChatInput({
   );
 
   return (
-    <form onSubmit={handleSubmit} className={`flex gap-2 ${className}`}>
+    <form onSubmit={handleSubmit} className={`flex items-center gap-2 ${className}`}>
       <input
         type="text"
         value={value}
@@ -62,20 +63,21 @@ export default function ChatInput({
         type="submit"
         disabled={disabled || !value.trim()}
         className="
-          px-5 py-3.5 rounded-2xl
+          w-11 h-11 shrink-0 rounded-full
+          flex items-center justify-center
           bg-indigo-600/80 hover:bg-indigo-500/80
           backdrop-blur-xl
           border border-indigo-400/20
-          text-white text-sm font-medium tracking-wide
+          text-white
           transition-all duration-300
           disabled:opacity-30 disabled:cursor-not-allowed
           hover:shadow-lg hover:shadow-indigo-500/20
-          active:scale-[0.97]
+          active:scale-[0.95]
         "
       >
         <svg
-          width="18"
-          height="18"
+          width="16"
+          height="16"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -87,6 +89,7 @@ export default function ChatInput({
           <polygon points="22 2 15 22 11 13 2 9 22 2" />
         </svg>
       </button>
+      <VoiceOrb />
     </form>
   );
 }

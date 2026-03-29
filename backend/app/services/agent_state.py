@@ -40,3 +40,6 @@ class AgentState(TypedDict):
     answer: str
     subgraph: dict[str, list[str]]
     sources: list[dict[str, Any]]
+
+    # Conversational spoken version of the answer (set by the vocalize node)
+    spoken_answer: str

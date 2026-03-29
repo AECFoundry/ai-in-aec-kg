@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     AGENT_MODEL: str = "openai/gpt-4.1"
     TTS_MODEL: str = "tts-1"
-    TTS_VOICE: str = "onyx"
+    TTS_VOICE: str = "nova"
     NEO4J_URI: str = "bolt://localhost:7687"
     NEO4J_USER: str = "neo4j"
     NEO4J_PASSWORD: str = ""

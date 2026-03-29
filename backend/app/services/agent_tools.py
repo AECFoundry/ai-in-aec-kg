@@ -26,11 +26,11 @@ _TYPE_TO_INDEX = {
     "TranscriptChunk": "chunk_embedding",
 }
 
-_VALID_LABELS = (
-    "Session OR n:Speaker OR n:Organization OR n:Topic "
-    "OR n:Technology OR n:Concept OR n:Project OR n:Presentation "
-    "OR n:TranscriptChunk"
-)
+_VALID_LABELS_LIST = [
+    "Session", "Speaker", "Organization", "Topic",
+    "Technology", "Concept", "Project", "Presentation",
+    "TranscriptChunk",
+]
 
 
 @tool
@@ -117,9 +117,10 @@ async def get_node_neighbors(
         rel_filter = "AND type(r) IN $rel_types"
         params["rel_types"] = relationship_types
 
+    label_filter = " OR ".join(f"neighbor:{l}" for l in _VALID_LABELS_LIST)
     query = f"""
     MATCH (n {{id: $node_id}})-[r]-(neighbor)
-    WHERE neighbor:{_VALID_LABELS}
+    WHERE ({label_filter})
     {rel_filter}
     RETURN neighbor.id AS id, neighbor.name AS name, labels(neighbor)[0] AS label,
            type(r) AS rel_type, startNode(r).id AS source, endNode(r).id AS target,

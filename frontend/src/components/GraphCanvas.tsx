@@ -361,6 +361,7 @@ export default function GraphCanvas() {
         onBackgroundClick={handleBackgroundClick}
         warmupTicks={100}
         cooldownTicks={300}
+        showNavInfo={false}
       />
     </div>
   );

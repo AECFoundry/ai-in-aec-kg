@@ -76,6 +76,7 @@ export type SSEEvent =
   | { event: "tool_result"; data: { type: string; tool: string; detail: string } }
   | { event: "graph_update"; data: { type: string; node_ids: string[]; link_ids: string[] } }
   | { event: "token"; data: { content: string } }
+  | { event: "spoken_token"; data: { type: string; content: string } }
   | { event: "done"; data: ChatResponse }
   | { event: "error"; data: { detail: string } };
 
@@ -83,7 +84,11 @@ export async function fetchVoiceCapabilities(): Promise<{ tts_available: boolean
   return request<{ tts_available: boolean }>("/voice/capabilities");
 }
 
-export async function fetchTTS(text: string, token: string): Promise<Blob> {
+export async function fetchTTS(
+  text: string,
+  token: string,
+  signal?: AbortSignal,
+): Promise<Blob> {
   const res = await fetch(`${BASE}/voice/tts`, {
     method: "POST",
     headers: {
@@ -91,6 +96,7 @@ export async function fetchTTS(text: string, token: string): Promise<Blob> {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ text }),
+    signal,
   });
   if (!res.ok) throw new Error(`TTS error ${res.status}`);
   return res.blob();

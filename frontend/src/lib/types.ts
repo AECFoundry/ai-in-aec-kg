@@ -41,6 +41,7 @@ export interface ChatMessage {
   id?: string;
   role: "user" | "assistant";
   content: string;
+  spokenAnswer?: string;
   subgraph?: SubgraphHighlight;
   sources?: SourceRef[];
   agentTrace?: AgentTraceStep[];
@@ -62,4 +63,5 @@ export interface ChatResponse {
   answer: string;
   subgraph?: SubgraphHighlight;
   sources?: SourceRef[];
+  spoken_answer?: string;
 }

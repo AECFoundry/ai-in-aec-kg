@@ -79,6 +79,7 @@ async def chat(
     answer = result.get("answer", "I could not find a relevant answer.")
     subgraph = result.get("subgraph", {})
     sources = result.get("sources", [])
+    spoken_answer = result.get("spoken_answer", "")
 
     add_message(user_id, "assistant", answer)
 
@@ -89,6 +90,7 @@ async def chat(
             link_ids=subgraph.get("link_ids", []),
         ),
         sources=sources,
+        spoken_answer=spoken_answer,
     )
 
 
@@ -113,6 +115,7 @@ async def chat_stream(
             final_answer = ""
             final_subgraph: dict = {}
             final_sources: list = []
+            final_spoken_answer = ""
 
             async for event, chunk in _agent.astream(
                 agent_input,
@@ -144,6 +147,11 @@ async def chat_stream(
                                 "data": json.dumps({"content": text_chunk}),
                             }
 
+                    if "vocalize" in chunk:
+                        final_spoken_answer = chunk["vocalize"].get(
+                            "spoken_answer", ""
+                        )
+
             add_message(user_id, "assistant", final_answer)
 
             yield {
@@ -152,6 +160,7 @@ async def chat_stream(
                     "answer": final_answer,
                     "subgraph": final_subgraph,
                     "sources": final_sources,
+                    "spoken_answer": final_spoken_answer,
                 }),
             }
         except Exception:
