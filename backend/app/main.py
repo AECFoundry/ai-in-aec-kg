@@ -11,8 +11,9 @@ from app.dependencies import (
     close_neo4j_driver,
     init_neo4j_driver,
     init_openai_client,
+    init_tts_client,
 )
-from app.routers import auth, chat, graph, health
+from app.routers import auth, chat, graph, health, voice
 
 
 @asynccontextmanager
@@ -21,6 +22,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Startup
     await init_neo4j_driver()
     init_openai_client()
+    init_tts_client()
     yield
     # Shutdown
     await close_neo4j_driver()
@@ -58,3 +60,4 @@ app.include_router(health.router)
 app.include_router(graph.router)
 app.include_router(auth.router)
 app.include_router(chat.router)
+app.include_router(voice.router)

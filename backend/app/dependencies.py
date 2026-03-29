@@ -11,6 +11,7 @@ from app.config import get_settings
 
 _neo4j_driver: AsyncDriver | None = None
 _openai_client: AsyncOpenAI | None = None
+_tts_client: AsyncOpenAI | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -63,3 +64,22 @@ def get_openai_client() -> AsyncOpenAI:
     if _openai_client is None:
         raise RuntimeError("OpenAI client not initialised")
     return _openai_client
+
+
+# ---------------------------------------------------------------------------
+# TTS (direct OpenAI — never OpenRouter)
+# ---------------------------------------------------------------------------
+
+def init_tts_client() -> AsyncOpenAI | None:
+    """Create a direct OpenAI client for TTS. Returns None if no OPENAI_API_KEY."""
+    global _tts_client
+    settings = get_settings()
+    if not settings.OPENAI_API_KEY:
+        return None
+    _tts_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+    return _tts_client
+
+
+def get_tts_client() -> AsyncOpenAI | None:
+    """Return the TTS client, or None if TTS is not configured."""
+    return _tts_client

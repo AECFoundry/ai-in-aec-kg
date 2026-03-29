@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
 
     AGENT_MODEL: str = "openai/gpt-4.1"
+    TTS_MODEL: str = "tts-1"
+    TTS_VOICE: str = "onyx"
     NEO4J_URI: str = "bolt://localhost:7687"
     NEO4J_USER: str = "neo4j"
     NEO4J_PASSWORD: str = ""
@@ -27,6 +29,11 @@ class Settings(BaseSettings):
         "env_file_encoding": "utf-8",
         "extra": "ignore",
     }
+
+    @property
+    def has_tts(self) -> bool:
+        """TTS always requires a direct OpenAI key, regardless of LLM provider."""
+        return bool(self.OPENAI_API_KEY)
 
     @property
     def use_openrouter(self) -> bool:

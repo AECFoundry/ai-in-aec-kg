@@ -133,6 +133,8 @@ GET  /api/session         — Validate JWT, return user info
 POST /api/chat            — {message} → JSON: {answer, subgraph, sources}
 POST /api/chat/stream     — {message} → SSE: thinking, tool_*, token, done events
 GET  /api/chat/history    — Session message history
+GET  /api/voice/capabilities — {tts_available: bool} (no auth)
+POST /api/voice/tts       — {text} → audio/mpeg stream (requires OPENAI_API_KEY)
 ```
 
 ## Environment Variables

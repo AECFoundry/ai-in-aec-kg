@@ -79,6 +79,23 @@ export type SSEEvent =
   | { event: "done"; data: ChatResponse }
   | { event: "error"; data: { detail: string } };
 
+export async function fetchVoiceCapabilities(): Promise<{ tts_available: boolean }> {
+  return request<{ tts_available: boolean }>("/voice/capabilities");
+}
+
+export async function fetchTTS(text: string, token: string): Promise<Blob> {
+  const res = await fetch(`${BASE}/voice/tts`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) throw new Error(`TTS error ${res.status}`);
+  return res.blob();
+}
+
 export async function sendMessageStream(
   message: string,
   token: string,

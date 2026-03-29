@@ -48,6 +48,12 @@ interface AppState {
   pendingQuestion: string | null;
   setShowSignup: (show: boolean) => void;
   setPendingQuestion: (q: string | null) => void;
+
+  // Voice
+  voiceState: 'idle' | 'listening' | 'processing' | 'speaking';
+  ttsAvailable: boolean;
+  setVoiceState: (state: 'idle' | 'listening' | 'processing' | 'speaking') => void;
+  setTtsAvailable: (available: boolean) => void;
 }
 
 export type { AppState };
@@ -144,4 +150,10 @@ export const useAppStore = create<AppState>()((set) => ({
   pendingQuestion: null,
   setShowSignup: (show) => set({ showSignup: show }),
   setPendingQuestion: (q) => set({ pendingQuestion: q }),
+
+  // Voice
+  voiceState: 'idle' as const,
+  ttsAvailable: false,
+  setVoiceState: (state) => set({ voiceState: state }),
+  setTtsAvailable: (available) => set({ ttsAvailable: available }),
 }));
