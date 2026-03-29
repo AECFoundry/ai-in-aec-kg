@@ -12,6 +12,7 @@ https://github.com/user-attachments/assets/DEMO_VIDEO_PLACEHOLDER
 - **Natural language questions** — ask things like *"Which speakers discussed digital twins in facility management?"* or *"How is BIM connected to sustainability?"*
 - **Agentic GraphRAG** — an AI agent autonomously decides how to search the graph (vector search, graph traversal, path finding, Cypher queries) and streams its reasoning in real time
 - **Cited answers** — every response includes numbered citations linking back to specific presentations and speakers, with click-to-fly navigation
+- **Voice interaction** — tap the voice orb to ask questions by voice (Web Speech STT), hear answers spoken back via OpenAI TTS with sentence-level streaming for near-instant audio playback
 - **Node browser** — left sidebar for browsing all nodes by type, with search and click-to-focus
 
 ## Architecture
@@ -156,7 +157,7 @@ ai-in-aec-kg/
 ├── frontend/                  # React 19 + TypeScript + Vite
 │   ├── src/
 │   │   ├── components/        # GraphCanvas, ChatSidebar, NodePopover, etc.
-│   │   ├── hooks/             # useChat, useGraphData, useSession
+│   │   ├── hooks/             # useChat, useVoice, useGraphData, useSession
 │   │   ├── stores/            # Zustand state (appStore.ts)
 │   │   ├── lib/               # API client, types, SSE handler
 │   │   └── styles/            # Theme colors by node type
@@ -168,7 +169,7 @@ ai-in-aec-kg/
 │   │   ├── config.py          # Pydantic settings from .env
 │   │   ├── dependencies.py    # Neo4j + OpenAI client singletons
 │   │   ├── routers/           # auth, chat, graph, health endpoints
-│   │   ├── services/          # Agent graph, tools, chat memory, embeddings
+│   │   ├── services/          # Agent graph, tools, chat memory, embeddings, TTS
 │   │   └── models/            # Pydantic request/response schemas
 │   │
 │   ├── data/seed/             # Pre-built graph data (ships with repo)
@@ -228,7 +229,13 @@ The chat system uses a [LangGraph](https://langchain-ai.github.io/langgraph/) ag
 | `find_paths` | Find shortest paths between two nodes |
 | `run_cypher_query` | Execute read-only Cypher for aggregations |
 
-The agent decides which tools to use based on the question. Simple factual lookups get 1 tool call; complex analytical questions trigger 2-3 rounds of iterative exploration. All reasoning streams to the frontend in real time via SSE.
+The agent classifies each query into one of three strategies:
+
+- **Entity-navigation** — for questions about specific named entities (*"What presentations are in the Computational Design session?"*) → finds the entity node, then traverses relationships
+- **Semantic/exploratory** — for open-ended content questions (*"How is AI being used in structural engineering?"*) → vector search across TranscriptChunks and related types, then explores neighbors
+- **Quantitative** — for counts, rankings, or aggregations (*"How many sessions are there?"*) → direct Cypher queries
+
+All reasoning streams to the frontend in real time via SSE, with progressive graph highlighting as nodes are discovered.
 
 ## Tech Stack
 
@@ -241,6 +248,7 @@ The agent decides which tools to use based on the question. Simple factual looku
 | Graph DB | Neo4j 5.x Community + APOC |
 | LLMs | GPT-4.1 (agent), Gemini 2.5 Flash (extraction) via [OpenRouter](https://openrouter.ai) |
 | Embeddings | text-embedding-3-large (3072d) via OpenRouter |
+| Voice | Web Speech API (STT), OpenAI TTS with sentence-level streaming pipeline |
 | NLP | spaCy, rapidfuzz, KeyBERT |
 
 ## API Endpoints
@@ -254,6 +262,8 @@ The agent decides which tools to use based on the question. Simple factual looku
 | `POST` | `/api/chat` | Send question → JSON response |
 | `POST` | `/api/chat/stream` | Send question → SSE stream with reasoning trace |
 | `GET` | `/api/chat/history` | Session message history |
+| `GET` | `/api/voice/capabilities` | Check TTS availability |
+| `POST` | `/api/voice/tts` | Text → streaming MP3 audio |
 
 ## License
 
