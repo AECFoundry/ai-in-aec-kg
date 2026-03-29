@@ -100,6 +100,7 @@ async def llm_call(state: AgentState) -> dict[str, Any]:
 
 async def tool_node(state: AgentState) -> dict[str, Any]:
     """Execute tool calls and capture node IDs / sources."""
+    writer = get_stream_writer()
     last_msg = state["messages"][-1]
     results: list[ToolMessage] = []
     new_node_ids: set[str] = set()
@@ -172,6 +173,14 @@ async def tool_node(state: AgentState) -> dict[str, Any]:
         if tc["name"] == "expand_subgraph":
             for src, tgt in re.findall(r"(\S+) -\[\w+\]-> (\S+)", obs_text):
                 new_link_ids.add(f"{src}->{tgt}")
+
+        # Stream discovered nodes to frontend for progressive graph highlighting
+        if new_node_ids or new_link_ids:
+            writer({
+                "type": "graph_update",
+                "node_ids": sorted(new_node_ids),
+                "link_ids": sorted(new_link_ids),
+            })
 
     return {
         "messages": results,

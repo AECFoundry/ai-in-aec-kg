@@ -11102,7 +11102,7 @@ And then we have point solutions. They don't scale, they don't compound, and the
 
 and the most important thing of all is that we think the best way to develop AI is through a compounding platform model where every use case that you build and deploy builds on shared knowledge that exists and extends the intelligence layer for the next use case and the use case after that.
 
-So for us, this is what it looks like in practice. We call our platform ACOSS, and it's an AI operating system for the AEC industry. But what I want you to focus on here is the structure. On the left you have your systems of record, ACC and Procore and SharePoint. This is where all of your project data and your institutional knowledge lives and on the right we have systems of action. This is where intelligence and actions flow back out of the platform into down
+So for us, this is what it looks like in practice. We call our platform AECOS, and it's an AI operating system for the AEC industry. But what I want you to focus on here is the structure. On the left you have your systems of record, ACC and Procore and SharePoint. This is where all of your project data and your institutional knowledge lives and on the right we have systems of action. This is where intelligence and actions flow back out of the platform into down
 
 s t re am systems and back into your systems of record. Most importantly, of course, is the platform that sits in the middle, and it's a neutral layer that sits between your systems. It doesn't try to replace anything. It tries to connect everything and make it more intelligent.
 

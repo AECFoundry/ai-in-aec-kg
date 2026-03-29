@@ -1117,7 +1117,7 @@
       "id": "speaker_guido_maciocci",
       "name": "Guido Maciocci",
       "type": "Speaker",
-      "description": "Guido Maciocci introduced ACOS, an AI operating system tailored for AEC firms.",
+      "description": "Guido Maciocci introduced AECOS, an AI operating system tailored for AEC firms.",
       "source_sessions": [
         14
       ]
@@ -4965,10 +4965,10 @@
       ]
     },
     {
-      "id": "technology_acos",
-      "name": "ACOS",
+      "id": "technology_aecos",
+      "name": "AECOS",
       "type": "Technology",
-      "description": "ACOS is an AI operating system tailored for architecture, engineering, and construction (AEC) firms.",
+      "description": "AECOS is an AI operating system tailored for architecture, engineering, and construction (AEC) firms.",
       "source_sessions": [
         14
       ]
@@ -11314,15 +11314,15 @@
     },
     {
       "source_id": "speaker_guido_maciocci",
-      "target_id": "technology_acos",
+      "target_id": "technology_aecos",
       "type": "INTRODUCED",
-      "description": "Guido Maciocci introduced ACOS.",
+      "description": "Guido Maciocci introduced AECOS.",
       "properties": {
         "session": 14
       }
     },
     {
-      "source_id": "technology_acos",
+      "source_id": "technology_aecos",
       "target_id": "concept_human_in_the_loop_review",
       "type": "FEATURES",
       "description": "",

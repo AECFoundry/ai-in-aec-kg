@@ -19,6 +19,7 @@ export function useChat() {
       setLoading,
       setSidebarOpen,
       focusSubgraph,
+      clearHighlight,
       setShowSignup,
       setPendingQuestion,
     } = useAppStore.getState();
@@ -32,6 +33,7 @@ export function useChat() {
     addMessage({ role: "user", content: trimmed });
     setSidebarOpen(true);
     setLoading(true);
+    clearHighlight();
 
     // Create a placeholder streaming message
     const msgId = `assistant-${++msgCounter}`;
@@ -62,6 +64,14 @@ export function useChat() {
               detail: event.data.detail,
             });
             update(msgId, { agentTrace: [...trace] });
+            break;
+          }
+          case "graph_update": {
+            const { addHighlight } = useAppStore.getState();
+            addHighlight(
+              event.data.node_ids ?? [],
+              event.data.link_ids ?? [],
+            );
             break;
           }
           case "token": {

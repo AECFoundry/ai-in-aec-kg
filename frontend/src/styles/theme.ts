@@ -1,10 +1,10 @@
 export const colors = {
-  bg: "#000011",
-  surface: "rgba(255,255,255,0.03)",
-  surfaceHover: "rgba(255,255,255,0.06)",
-  border: "rgba(255,255,255,0.08)",
+  bg: "#060918",
+  surface: "rgba(255,255,255,0.05)",
+  surfaceHover: "rgba(255,255,255,0.09)",
+  border: "rgba(255,255,255,0.10)",
   text: "#e2e8f0",
-  textMuted: "#64748b",
+  textMuted: "#94a3b8",
   accent: "#6366f1",
   accentGlow: "#818cf8",
 };

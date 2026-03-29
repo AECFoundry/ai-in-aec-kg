@@ -142,7 +142,7 @@ export default function GraphCanvas() {
   useEffect(() => {
     nodeObjectsRef.current.forEach((group, nodeId) => {
       const isHl = highlightedNodes.has(nodeId);
-      const sphereOpacity = hasHighlight ? (isHl ? 1.0 : 0.08) : 0.9;
+      const sphereOpacity = hasHighlight ? (isHl ? 1.0 : 0.18) : 0.9;
       const glowOpacity = hasHighlight && isHl ? 0.15 : 0;
 
       group.children.forEach((child) => {
@@ -215,14 +215,14 @@ export default function GraphCanvas() {
           (mesh.material as THREE.MeshBasicMaterial).opacity = hasHighlight
             ? shouldHighlight
               ? 0.25
-              : 0.03
+              : 0.06
             : 0.12;
         }
         if (mesh.name === "core") {
           (mesh.material as THREE.MeshBasicMaterial).opacity = hasHighlight
             ? shouldHighlight
               ? 0.85
-              : 0.06
+              : 0.12
             : 0.45;
         }
       });
@@ -338,7 +338,7 @@ export default function GraphCanvas() {
           ? `calc(100% - ${LEFT_SIDEBAR_WIDTH}px - ${RIGHT_SIDEBAR_WIDTH}px)`
           : `calc(100% - ${LEFT_SIDEBAR_WIDTH}px)`,
         background:
-          "radial-gradient(ellipse at 50% 50%, #0a0f2e 0%, #060b1f 40%, #020510 100%)",
+          "radial-gradient(ellipse at 50% 50%, #111638 0%, #0a1028 40%, #060918 100%)",
       }}
     >
       <ForceGraph3D

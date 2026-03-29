@@ -25,7 +25,7 @@ function SearchInput({
   return (
     <div className="relative">
       <svg
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
         width="14"
         height="14"
         viewBox="0 0 24 24"
@@ -46,7 +46,7 @@ function SearchInput({
         className="
           w-full pl-9 pr-3 py-2 rounded-xl
           bg-white/[0.04] border border-white/[0.06]
-          text-sm text-slate-200 placeholder-slate-600
+          text-sm text-slate-200 placeholder-slate-500
           outline-none focus:border-indigo-500/30 focus:bg-white/[0.06]
           transition-all duration-200
         "
@@ -54,7 +54,7 @@ function SearchInput({
       {value && (
         <button
           onClick={() => onChange("")}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
         >
           <svg
             width="12"
@@ -174,11 +174,11 @@ function GroupSection({
             {highlightedCount}
           </span>
         )}
-        <span className="text-[11px] text-slate-600 tabular-nums">
+        <span className="text-[11px] text-slate-400 tabular-nums">
           {nodes.length}
         </span>
         <svg
-          className={`text-slate-600 transition-transform duration-200 ${
+          className={`text-slate-400 transition-transform duration-200 ${
             isCollapsed ? "" : "rotate-90"
           }`}
           width="12"
@@ -217,7 +217,7 @@ function GroupSection({
                 />
               ))}
               {nodes.length === 0 && searchQuery && (
-                <p className="text-[12px] text-slate-600 px-3 py-2">
+                <p className="text-[12px] text-slate-400 px-3 py-2">
                   No matches
                 </p>
               )}
@@ -303,7 +303,7 @@ export default function LeftSidebar() {
     <aside
       className="
         fixed top-0 left-0 h-full w-[320px] z-40
-        bg-[#000011]/80 backdrop-blur-2xl
+        bg-[#060918]/80 backdrop-blur-2xl
         border-r border-white/[0.06]
         flex flex-col
       "
@@ -315,7 +315,7 @@ export default function LeftSidebar() {
             <h2 className="text-base font-semibold text-white tracking-wide">
               AI in AEC 2026
             </h2>
-            <p className="text-[11px] text-slate-500 mt-0.5 tracking-wider">
+            <p className="text-[11px] text-slate-400 mt-0.5 tracking-wider">
               {isLoading ? (
                 <span className="inline-block w-32 h-3 rounded skeleton-shimmer" />
               ) : (
@@ -354,16 +354,21 @@ export default function LeftSidebar() {
 
       {/* Footer — Powered by logo */}
       <div className="px-5 py-4 border-t border-white/[0.06]">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-slate-600 uppercase tracking-widest">
+        <a
+          href="https://www.aecfoundry.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2.5 opacity-60 hover:opacity-90 transition-opacity duration-200"
+        >
+          <span className="text-[11px] text-slate-400 uppercase tracking-widest">
             Powered by
           </span>
           <img
             src="/logo.png"
             alt="AECFoundry"
-            className="h-4 opacity-50"
+            className="h-7"
           />
-        </div>
+        </a>
       </div>
     </aside>
   );

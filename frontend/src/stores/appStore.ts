@@ -24,6 +24,7 @@ interface AppState {
   highlightedNodes: Set<string>;
   highlightedLinks: Set<string>;
   setHighlight: (nodes: string[], links: string[]) => void;
+  addHighlight: (nodes: string[], links: string[]) => void;
   clearHighlight: () => void;
 
   // Linked selection
@@ -90,6 +91,11 @@ export const useAppStore = create<AppState>()((set) => ({
       highlightedNodes: new Set(nodes),
       highlightedLinks: new Set(links),
     }),
+  addHighlight: (nodes, links) =>
+    set((state) => ({
+      highlightedNodes: new Set([...state.highlightedNodes, ...nodes]),
+      highlightedLinks: new Set([...state.highlightedLinks, ...links]),
+    })),
   clearHighlight: () =>
     set({
       highlightedNodes: new Set<string>(),

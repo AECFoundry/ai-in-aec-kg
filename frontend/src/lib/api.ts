@@ -74,6 +74,7 @@ export type SSEEvent =
   | { event: "tool_call"; data: { type: string; tool: string; detail: string } }
   | { event: "tool_progress"; data: { type: string; tool: string; detail: string } }
   | { event: "tool_result"; data: { type: string; tool: string; detail: string } }
+  | { event: "graph_update"; data: { type: string; node_ids: string[]; link_ids: string[] } }
   | { event: "token"; data: { content: string } }
   | { event: "done"; data: ChatResponse }
   | { event: "error"; data: { detail: string } };

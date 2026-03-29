@@ -48,7 +48,7 @@ function TopicBadges({ nodeId }: { nodeId: string }) {
   const topicColor = nodeColors.Topic ?? "#f43f5e";
   return (
     <div className="mb-4">
-      <h4 className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">Topics</h4>
+      <h4 className="text-[11px] uppercase tracking-wider text-slate-400 mb-2">Topics</h4>
       <div className="flex flex-wrap gap-1.5">
         {topics.map((t) => (
           <span
@@ -151,7 +151,7 @@ function SessionContent({
 
       {presentations.length > 0 && (
         <div className="mb-4">
-          <h4 className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">
+          <h4 className="text-[11px] uppercase tracking-wider text-slate-400 mb-2">
             Presentations
           </h4>
           <div className="space-y-1">
@@ -174,7 +174,7 @@ function SessionContent({
                   {pres.name}
                 </span>
                 <svg
-                  className="text-slate-600 group-hover:text-slate-400 transition-colors shrink-0"
+                  className="text-slate-400 group-hover:text-slate-400 transition-colors shrink-0"
                   width="14"
                   height="14"
                   viewBox="0 0 24 24"
@@ -196,7 +196,7 @@ function SessionContent({
         <div className="space-y-2.5">
           {extraProps.map(([key, value]) => (
             <div key={key}>
-              <dt className="text-[11px] uppercase tracking-wider text-slate-500 mb-0.5">
+              <dt className="text-[11px] uppercase tracking-wider text-slate-400 mb-0.5">
                 {key.replace(/_/g, " ")}
               </dt>
               <dd className="text-sm text-slate-300 leading-relaxed">
@@ -277,7 +277,7 @@ function PresentationContent({
       {speakers.length > 0 && (
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <svg
-            className="text-slate-500 shrink-0"
+            className="text-slate-400 shrink-0"
             width="14"
             height="14"
             viewBox="0 0 24 24"
@@ -340,7 +340,7 @@ function PresentationContent({
             {sessionNode.name}
           </span>
           <svg
-            className="text-slate-600 group-hover:text-slate-400 transition-colors shrink-0"
+            className="text-slate-400 group-hover:text-slate-400 transition-colors shrink-0"
             width="14"
             height="14"
             viewBox="0 0 24 24"
@@ -359,7 +359,7 @@ function PresentationContent({
         <div className="space-y-2.5">
           {extraProps.map(([key, value]) => (
             <div key={key}>
-              <dt className="text-[11px] uppercase tracking-wider text-slate-500 mb-0.5">
+              <dt className="text-[11px] uppercase tracking-wider text-slate-400 mb-0.5">
                 {key.replace(/_/g, " ")}
               </dt>
               <dd className="text-sm text-slate-300 leading-relaxed">
@@ -405,7 +405,7 @@ function NodeContent({ node, onNavigate }: { node: GraphNode; onNavigate: (nodeI
         <div className="space-y-2.5">
           {filteredProps.map(([key, value]) => (
             <div key={key}>
-              <dt className="text-[11px] uppercase tracking-wider text-slate-500 mb-0.5">
+              <dt className="text-[11px] uppercase tracking-wider text-slate-400 mb-0.5">
                 {key.replace(/_/g, " ")}
               </dt>
               <dd className="text-sm text-slate-300 leading-relaxed">
@@ -468,7 +468,7 @@ function LinkContent({ link }: { link: GraphLink }) {
         <div className="space-y-2.5">
           {filteredProps.map(([key, value]) => (
             <div key={key}>
-              <dt className="text-[11px] uppercase tracking-wider text-slate-500 mb-0.5">
+              <dt className="text-[11px] uppercase tracking-wider text-slate-400 mb-0.5">
                 {key.replace(/_/g, " ")}
               </dt>
               <dd className="text-sm text-slate-300 leading-relaxed">
@@ -561,7 +561,7 @@ export default function NodePopover() {
                 absolute top-4 right-4
                 p-1.5 rounded-lg
                 hover:bg-white/[0.06]
-                text-slate-500 hover:text-white
+                text-slate-400 hover:text-white
                 transition-all duration-200
               "
             >

@@ -735,7 +735,7 @@
       "id": "speaker_guido_maciocci",
       "name": "Guido Maciocci",
       "type": "Speaker",
-      "description": "Guido Maciocci introduced ACOS, an AI operating system tailored for AEC firms.",
+      "description": "Guido Maciocci introduced AECOS, an AI operating system tailored for AEC firms.",
       "source_sessions": [
         14
       ]
@@ -4363,10 +4363,10 @@
       ]
     },
     {
-      "id": "technology_acos",
-      "name": "ACOS",
+      "id": "technology_aecos",
+      "name": "AECOS",
       "type": "Technology",
-      "description": "ACOS is an AI operating system tailored for architecture, engineering, and construction (AEC) firms.",
+      "description": "AECOS is an AI operating system tailored for architecture, engineering, and construction (AEC) firms.",
       "source_sessions": [
         14
       ]
@@ -10875,7 +10875,7 @@
       ]
     },
     {
-      "id": "topic_acos_ai_operating",
+      "id": "topic_aecos_ai_operating",
       "name": "Acos Ai Operating",
       "type": "Topic",
       "description": "Keyword topic extracted from session_14",
@@ -14217,7 +14217,7 @@
       "id": "topic_foundry_partner_aec",
       "name": "Foundry Partner Aec",
       "type": "Topic",
-      "description": "Keyword topic extracted from presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "description": "Keyword topic extracted from presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "source_sessions": [
         14
       ]
@@ -14226,7 +14226,7 @@
       "id": "topic_aec_firms",
       "name": "Aec Firms",
       "type": "Topic",
-      "description": "Keyword topic extracted from presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "description": "Keyword topic extracted from presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "source_sessions": [
         14
       ]
@@ -14235,7 +14235,7 @@
       "id": "topic_ai_compounding_platform",
       "name": "Ai Compounding Platform",
       "type": "Topic",
-      "description": "Keyword topic extracted from presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "description": "Keyword topic extracted from presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "source_sessions": [
         14
       ]
@@ -14244,7 +14244,7 @@
       "id": "topic_aec_enterprises_way",
       "name": "Aec Enterprises Way",
       "type": "Topic",
-      "description": "Keyword topic extracted from presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "description": "Keyword topic extracted from presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "source_sessions": [
         14
       ]
@@ -14253,7 +14253,7 @@
       "id": "topic_aec_builds",
       "name": "Aec Builds",
       "type": "Topic",
-      "description": "Keyword topic extracted from presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "description": "Keyword topic extracted from presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "source_sessions": [
         14
       ]
@@ -14262,7 +14262,7 @@
       "id": "topic_built_aec_native",
       "name": "Built Aec Native",
       "type": "Topic",
-      "description": "Keyword topic extracted from presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "description": "Keyword topic extracted from presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "source_sessions": [
         14
       ]
@@ -14271,7 +14271,7 @@
       "id": "topic_effective_ai_aec",
       "name": "Effective Ai Aec",
       "type": "Topic",
-      "description": "Keyword topic extracted from presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "description": "Keyword topic extracted from presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "source_sessions": [
         14
       ]
@@ -14280,7 +14280,7 @@
       "id": "topic_aec_platform_engineering",
       "name": "Aec Platform Engineering",
       "type": "Topic",
-      "description": "Keyword topic extracted from presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "description": "Keyword topic extracted from presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "source_sessions": [
         14
       ]
@@ -19880,15 +19880,15 @@
     },
     {
       "source_id": "speaker_guido_maciocci",
-      "target_id": "technology_acos",
+      "target_id": "technology_aecos",
       "type": "INTRODUCED",
-      "description": "Guido Maciocci introduced ACOS.",
+      "description": "Guido Maciocci introduced AECOS.",
       "properties": {
         "session": 14
       }
     },
     {
-      "source_id": "technology_acos",
+      "source_id": "technology_aecos",
       "target_id": "concept_human_in_the_loop_review",
       "type": "FEATURES",
       "description": "",
@@ -24736,37 +24736,37 @@
       }
     },
     {
-      "source_id": "presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "source_id": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "target_id": "speaker_guido_machiacci",
       "type": "MENTIONS",
-      "description": "presentation_s14_acos_an_ai_operating_system_for_aec_firms mentions Guido Machiacci",
+      "description": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms mentions Guido Machiacci",
       "properties": {
         "source": "spacy_ner"
       }
     },
     {
-      "source_id": "presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "source_id": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "target_id": "organization_procore_sharepoint",
       "type": "MENTIONS",
-      "description": "presentation_s14_acos_an_ai_operating_system_for_aec_firms mentions Procore, SharePoint",
+      "description": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms mentions Procore, SharePoint",
       "properties": {
         "source": "spacy_ner"
       }
     },
     {
-      "source_id": "presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "source_id": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "target_id": "technology_start",
       "type": "MENTIONS",
-      "description": "presentation_s14_acos_an_ai_operating_system_for_aec_firms mentions START",
+      "description": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms mentions START",
       "properties": {
         "source": "spacy_ner"
       }
     },
     {
-      "source_id": "presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "source_id": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "target_id": "organization_ppe",
       "type": "MENTIONS",
-      "description": "presentation_s14_acos_an_ai_operating_system_for_aec_firms mentions PPE",
+      "description": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms mentions PPE",
       "properties": {
         "source": "spacy_ner"
       }
@@ -25982,9 +25982,9 @@
     },
     {
       "source_id": "session_14",
-      "target_id": "topic_acos_ai_operating",
+      "target_id": "topic_aecos_ai_operating",
       "type": "COVERS_TOPIC",
-      "description": "Keyword 'acos ai operating' (score=0.50)",
+      "description": "Keyword 'aecos ai operating' (score=0.50)",
       "properties": {
         "source": "keybert",
         "score": 0.501
@@ -29691,7 +29691,7 @@
       }
     },
     {
-      "source_id": "presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "source_id": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "target_id": "topic_foundry_partner_aec",
       "type": "COVERS_TOPIC",
       "description": "Keyword 'foundry partner aec' (score=0.51)",
@@ -29701,7 +29701,7 @@
       }
     },
     {
-      "source_id": "presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "source_id": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "target_id": "topic_aec_firms",
       "type": "COVERS_TOPIC",
       "description": "Keyword 'aec firms' (score=0.52)",
@@ -29711,7 +29711,7 @@
       }
     },
     {
-      "source_id": "presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "source_id": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "target_id": "topic_ai_compounding_platform",
       "type": "COVERS_TOPIC",
       "description": "Keyword 'ai compounding platform' (score=0.52)",
@@ -29721,7 +29721,7 @@
       }
     },
     {
-      "source_id": "presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "source_id": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "target_id": "topic_aec_enterprises_way",
       "type": "COVERS_TOPIC",
       "description": "Keyword 'aec enterprises way' (score=0.53)",
@@ -29731,7 +29731,7 @@
       }
     },
     {
-      "source_id": "presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "source_id": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "target_id": "topic_aec_builds",
       "type": "COVERS_TOPIC",
       "description": "Keyword 'aec builds' (score=0.53)",
@@ -29741,7 +29741,7 @@
       }
     },
     {
-      "source_id": "presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "source_id": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "target_id": "topic_built_aec_native",
       "type": "COVERS_TOPIC",
       "description": "Keyword 'built aec native' (score=0.55)",
@@ -29751,7 +29751,7 @@
       }
     },
     {
-      "source_id": "presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "source_id": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "target_id": "topic_effective_ai_aec",
       "type": "COVERS_TOPIC",
       "description": "Keyword 'effective ai aec' (score=0.59)",
@@ -29761,7 +29761,7 @@
       }
     },
     {
-      "source_id": "presentation_s14_acos_an_ai_operating_system_for_aec_firms",
+      "source_id": "presentation_s14_aecos_an_ai_operating_system_for_aec_firms",
       "target_id": "topic_aec_platform_engineering",
       "type": "COVERS_TOPIC",
       "description": "Keyword 'aec platform engineering' (score=0.66)",

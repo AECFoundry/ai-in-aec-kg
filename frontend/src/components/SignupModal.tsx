@@ -126,7 +126,7 @@ export default function SignupModal() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-[11px] uppercase tracking-wider text-slate-500 mb-1.5">
+                <label className="block text-[11px] uppercase tracking-wider text-slate-400 mb-1.5">
                   Name
                 </label>
                 <input
@@ -136,7 +136,7 @@ export default function SignupModal() {
                   className="
                     w-full px-4 py-3 rounded-xl
                     bg-white/[0.04] border border-white/[0.08]
-                    text-white text-sm placeholder-slate-600
+                    text-white text-sm placeholder-slate-500
                     outline-none
                     focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/25
                     transition-all duration-200
@@ -146,7 +146,7 @@ export default function SignupModal() {
               </div>
 
               <div>
-                <label className="block text-[11px] uppercase tracking-wider text-slate-500 mb-1.5">
+                <label className="block text-[11px] uppercase tracking-wider text-slate-400 mb-1.5">
                   Email
                 </label>
                 <input
@@ -156,7 +156,7 @@ export default function SignupModal() {
                   className="
                     w-full px-4 py-3 rounded-xl
                     bg-white/[0.04] border border-white/[0.08]
-                    text-white text-sm placeholder-slate-600
+                    text-white text-sm placeholder-slate-500
                     outline-none
                     focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/25
                     transition-all duration-200
@@ -166,7 +166,7 @@ export default function SignupModal() {
               </div>
 
               <div>
-                <label className="block text-[11px] uppercase tracking-wider text-slate-500 mb-1.5">
+                <label className="block text-[11px] uppercase tracking-wider text-slate-400 mb-1.5">
                   Company
                 </label>
                 <input
@@ -176,7 +176,7 @@ export default function SignupModal() {
                   className="
                     w-full px-4 py-3 rounded-xl
                     bg-white/[0.04] border border-white/[0.08]
-                    text-white text-sm placeholder-slate-600
+                    text-white text-sm placeholder-slate-500
                     outline-none
                     focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/25
                     transition-all duration-200

@@ -161,7 +161,7 @@ function AgentTrace({ steps, isStreaming }: { steps: AgentTraceStep[]; isStreami
       <button
         onClick={() => setExpanded(!expanded)}
         className={`flex items-center gap-1.5 text-[10px] hover:text-slate-300 transition-colors uppercase tracking-wider font-medium ${
-          isStreaming ? "text-indigo-400" : "text-slate-500"
+          isStreaming ? "text-indigo-400" : "text-slate-400"
         }`}
       >
         <motion.svg
@@ -195,14 +195,14 @@ function AgentTrace({ steps, isStreaming }: { steps: AgentTraceStep[]; isStreami
                   initial={{ opacity: 0, x: -4 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.15, delay: isStreaming ? 0.05 : 0 }}
-                  className="flex items-start gap-2 text-[11px] text-slate-500"
+                  className="flex items-start gap-2 text-[11px] text-slate-400"
                 >
                   <span className={`mt-0.5 shrink-0 ${
                     step.type === "tool_result"
                       ? "text-emerald-500/70"
                       : step.type === "tool_call"
                         ? "text-indigo-400/70"
-                        : "text-slate-500/70"
+                        : "text-slate-400/70"
                   }`}>
                     {traceIcons[step.type]}
                   </span>
@@ -213,7 +213,7 @@ function AgentTrace({ steps, isStreaming }: { steps: AgentTraceStep[]; isStreami
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="flex items-center gap-1.5 text-[11px] text-slate-600"
+                  className="flex items-center gap-1.5 text-[11px] text-slate-400"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-400/50 animate-pulse" />
                 </motion.div>
@@ -320,7 +320,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
                   <span className="text-[12px] text-slate-400 group-hover:text-slate-200 truncate transition-colors">
                     {source.name}
                   </span>
-                  <span className="ml-auto text-[10px] text-slate-600 uppercase tracking-wider shrink-0">
+                  <span className="ml-auto text-[10px] text-slate-400 uppercase tracking-wider shrink-0">
                     {source.label}
                   </span>
                 </button>
@@ -368,7 +368,7 @@ export default function ChatSidebar() {
           transition={{ type: "spring", damping: 30, stiffness: 300 }}
           className="
             fixed top-0 right-0 h-full w-[420px] z-40
-            bg-[#000011]/80 backdrop-blur-2xl
+            bg-[#060918]/80 backdrop-blur-2xl
             border-l border-white/[0.06]
             flex flex-col
           "
@@ -379,7 +379,7 @@ export default function ChatSidebar() {
               <h2 className="text-base font-semibold text-white tracking-wide">
                 AI in AEC Explorer
               </h2>
-              <p className="text-[11px] text-slate-500 mt-0.5 tracking-wider uppercase">
+              <p className="text-[11px] text-slate-400 mt-0.5 tracking-wider uppercase">
                 Knowledge Graph Chat
               </p>
             </div>
@@ -391,7 +391,7 @@ export default function ChatSidebar() {
                   className="
                     p-2 rounded-xl
                     hover:bg-white/[0.06]
-                    text-slate-500 hover:text-slate-200
+                    text-slate-400 hover:text-slate-200
                     transition-all duration-200
                   "
                 >
@@ -449,11 +449,11 @@ export default function ChatSidebar() {
                   strokeWidth="1"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-slate-500 mb-4"
+                  className="text-slate-400 mb-4"
                 >
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-400">
                   Ask a question to explore
                   <br />
                   the knowledge graph

@@ -16,7 +16,7 @@ export default function App() {
   const { sendMessage } = useChat();
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#000011]">
+    <div className="relative w-screen h-screen overflow-hidden bg-[#060918]">
       {/* Left sidebar — node/relationship browser */}
       <LeftSidebar />
 
@@ -35,7 +35,7 @@ export default function App() {
               <ChatInput onSubmit={sendMessage} />
             </div>
           </div>
-          <p className="text-center text-[11px] text-slate-600 mt-3 tracking-wider">
+          <p className="text-center text-[11px] text-slate-500 mt-3 tracking-wider">
             Explore the AI in AEC conference knowledge graph
           </p>
         </div>
