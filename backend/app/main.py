@@ -13,7 +13,7 @@ from app.dependencies import (
     init_openai_client,
     init_tts_client,
 )
-from app.routers import auth, chat, graph, health, voice
+from app.routers import chat, graph, health, voice
 
 
 @asynccontextmanager
@@ -58,6 +58,5 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 app.include_router(health.router)
 app.include_router(graph.router)
-app.include_router(auth.router)
 app.include_router(chat.router)
 app.include_router(voice.router)

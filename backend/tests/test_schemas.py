@@ -1,8 +1,6 @@
 """Tests for Pydantic schema models."""
 from __future__ import annotations
 
-import json
-
 from app.models.schemas import (
     ChatMessage,
     ChatRequest,
@@ -10,10 +8,7 @@ from app.models.schemas import (
     GraphData,
     GraphLink,
     GraphNode,
-    RegisterRequest,
-    RegisterResponse,
     SubgraphHighlight,
-    UserInfo,
 )
 
 
@@ -69,24 +64,6 @@ class TestGraphData:
         )
         assert len(gd.nodes) == 1
         assert len(gd.links) == 1
-
-
-class TestRegisterModels:
-    def test_register_request(self):
-        req = RegisterRequest(name="Alice", email="alice@example.com", company="ACME")
-        assert req.email == "alice@example.com"
-
-    def test_register_response(self):
-        resp = RegisterResponse(session_id="abc123", token="jwt.token.here")
-        assert resp.token == "jwt.token.here"
-
-
-class TestUserInfo:
-    def test_round_trip(self):
-        u = UserInfo(name="Bob", email="bob@test.com", company="BuildCo")
-        data = json.loads(u.model_dump_json())
-        restored = UserInfo(**data)
-        assert restored.company == "BuildCo"
 
 
 class TestChatModels:

@@ -1,13 +1,7 @@
 import { create } from "zustand";
-import type { GraphData, GraphNode, GraphLink, ChatMessage, UserInfo } from "../lib/types";
+import type { GraphData, GraphNode, GraphLink, ChatMessage } from "../lib/types";
 
 interface AppState {
-  // Auth
-  token: string | null;
-  user: UserInfo | null;
-  setAuth: (token: string, user: UserInfo) => void;
-  clearAuth: () => void;
-
   // Chat
   sidebarOpen: boolean;
   messages: ChatMessage[];
@@ -43,12 +37,6 @@ interface AppState {
   setSelectedNode: (node: GraphNode | null) => void;
   setSelectedLink: (link: GraphLink | null) => void;
 
-  // Signup modal
-  showSignup: boolean;
-  pendingQuestion: string | null;
-  setShowSignup: (show: boolean) => void;
-  setPendingQuestion: (q: string | null) => void;
-
   // Voice
   voiceState: 'idle' | 'listening' | 'processing' | 'speaking';
   ttsAvailable: boolean;
@@ -61,18 +49,6 @@ interface AppState {
 export type { AppState };
 
 export const useAppStore = create<AppState>()((set) => ({
-  // Auth
-  token: null,
-  user: null,
-  setAuth: (token, user) => {
-    localStorage.setItem("kg_token", token);
-    set({ token, user });
-  },
-  clearAuth: () => {
-    localStorage.removeItem("kg_token");
-    set({ token: null, user: null });
-  },
-
   // Chat
   sidebarOpen: false,
   messages: [],
@@ -146,12 +122,6 @@ export const useAppStore = create<AppState>()((set) => ({
   selectedLink: null,
   setSelectedNode: (node) => set({ selectedNode: node, selectedLink: null }),
   setSelectedLink: (link) => set({ selectedLink: link, selectedNode: null }),
-
-  // Signup modal
-  showSignup: false,
-  pendingQuestion: null,
-  setShowSignup: (show) => set({ showSignup: show }),
-  setPendingQuestion: (q) => set({ pendingQuestion: q }),
 
   // Voice
   voiceState: 'idle' as const,

@@ -27,27 +27,6 @@ class GraphData(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Auth
-# ---------------------------------------------------------------------------
-
-class RegisterRequest(BaseModel):
-    name: str
-    email: str
-    company: str
-
-
-class RegisterResponse(BaseModel):
-    session_id: str
-    token: str
-
-
-class UserInfo(BaseModel):
-    name: str
-    email: str
-    company: str
-
-
-# ---------------------------------------------------------------------------
 # Chat
 # ---------------------------------------------------------------------------
 

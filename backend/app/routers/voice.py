@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.config import get_settings
 from app.dependencies import get_tts_client
-from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/voice", tags=["voice"])
 
@@ -25,7 +24,6 @@ async def voice_capabilities() -> dict[str, bool]:
 @router.post("/tts")
 async def text_to_speech(
     body: TTSRequest,
-    user=Depends(get_current_user),
 ) -> StreamingResponse:
     """Convert text to speech and stream back MP3 audio."""
     client = get_tts_client()

@@ -257,8 +257,6 @@ All reasoning streams to the frontend in real time via SSE, with progressive gra
 |--------|------|-------------|
 | `GET` | `/api/health` | Status + Neo4j connectivity |
 | `GET` | `/api/graph` | Full graph data (nodes + links) |
-| `POST` | `/api/register` | Sign up → JWT token |
-| `GET` | `/api/session` | Validate token, return user info |
 | `POST` | `/api/chat` | Send question → JSON response |
 | `POST` | `/api/chat/stream` | Send question → SSE stream with reasoning trace |
 | `GET` | `/api/chat/history` | Session message history |

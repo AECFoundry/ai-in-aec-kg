@@ -11,7 +11,7 @@ Interactive SPA for exploring a knowledge graph built from the AI in AEC 2026 co
 Monorepo with three main components:
 
 - **`frontend/`** — React 19 + TypeScript + Vite SPA. 3D graph via `react-force-graph-3d` (ThreeJS/WebGL). Zustand for state. Tailwind CSS v4 + Framer Motion for styling/animation.
-- **`backend/`** — Python FastAPI async API. Serves the graph data, handles chat via agentic GraphRAG pipeline (LangGraph), manages user sessions. All LLM and embedding calls go through OpenRouter.
+- **`backend/`** — Python FastAPI async API. Serves the graph data, handles chat via agentic GraphRAG pipeline (LangGraph). All LLM and embedding calls go through OpenRouter.
 - **`backend/pipeline/`** — Offline graph construction pipeline. Parses transcripts → LLM entity/relationship extraction → entity resolution → presentation decomposition → NLP enrichment (spaCy) → embedding generation → Neo4j load.
 
 **Data flow:** Transcripts → Pipeline → Neo4j ← Backend API ← Frontend SPA
@@ -48,7 +48,6 @@ Speakers
 | Extraction | Gemini 2.5 Flash via OpenRouter for entity extraction |
 | Embeddings | `text-embedding-3-large` (3072 dims) via OpenRouter |
 | NLP | spaCy `en_core_web_sm`, rapidfuzz, KeyBERT |
-| Auth | JWT (python-jose), user records in SQLite |
 | Agent | LangGraph StateGraph + langchain-openai (agentic ReAct loop) |
 
 ## Commands
@@ -119,21 +118,18 @@ The agent autonomously decides which tools to call based on query intent. SSE st
 ## Frontend UX Flow
 
 1. **Initial:** Full-screen 3D graph with left sidebar for node browsing. Auto-rotating, dark background (#000011). Text input floating at bottom center.
-2. **First question:** Signup modal (name/email/company) → JWT issued → question sent to `/api/chat/stream`
-3. **After signup:** Chat sidebar slides in from right. Text input moves to sidebar. Graph shrinks to fill remaining space.
-4. **On answer:** Agent reasoning trace streams in real time. Relevant subgraph nodes highlighted (opacity 1.0), all others dimmed. Camera flies to highlighted cluster. Numbered citation badges link back to source nodes.
+2. **First question:** Chat sidebar slides in from right. Text input moves to sidebar. Graph shrinks to fill remaining space.
+3. **On answer:** Agent reasoning trace streams in real time. Relevant subgraph nodes highlighted (opacity 1.0), all others dimmed. Camera flies to highlighted cluster. Numbered citation badges link back to source nodes.
 
 ## API Endpoints
 
 ```
 GET  /api/health          — Status + Neo4j connectivity
 GET  /api/graph           — Full graph (nodes + links, no embeddings)
-POST /api/register        — {name, email, company} → {session_id, token}
-GET  /api/session         — Validate JWT, return user info
 POST /api/chat            — {message} → JSON: {answer, subgraph, sources}
 POST /api/chat/stream     — {message} → SSE: thinking, tool_*, token, done events
 GET  /api/chat/history    — Session message history
-GET  /api/voice/capabilities — {tts_available: bool} (no auth)
+GET  /api/voice/capabilities — {tts_available: bool}
 POST /api/voice/tts       — {text} → audio/mpeg stream (requires OPENAI_API_KEY)
 ```
 
@@ -147,7 +143,6 @@ OPENAI_API_KEY=sk-...          # Option B: Direct OpenAI API
 NEO4J_URI=bolt://localhost:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=dev_password_kg2026
-JWT_SECRET=<random-secret>
 APP_URL=http://localhost:5173
 ```
 
@@ -158,6 +153,6 @@ Set one of `OPENROUTER_API_KEY` or `OPENAI_API_KEY`. If both are set, OpenRouter
 - OpenRouter is accessed via the OpenAI SDK with `base_url="https://openrouter.ai/api/v1"` — never use a custom HTTP client
 - All Neo4j writes use `MERGE` (not `CREATE`) so the pipeline is idempotent
 - The loader cleans up stale Presentation nodes before loading new ones to prevent duplicates across re-runs
-- Chat memory is session-scoped (in-memory dict keyed by email). Compaction triggers when history exceeds ~8000 tokens
+- Chat memory is in-memory with automatic compaction when history exceeds ~8000 tokens
 - Node colors by type: Session=amber, Presentation=yellow, Speaker=indigo, Organization=emerald, Topic=rose, Technology=blue, Concept=purple, Project=cyan
 - The graph has ~1,700 nodes and ~2,500 edges (TranscriptChunks excluded from 3D view). Full graph sent to frontend in one request

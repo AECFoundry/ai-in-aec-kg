@@ -53,12 +53,6 @@ export interface SubgraphHighlight {
   link_ids: string[];
 }
 
-export interface UserInfo {
-  name: string;
-  email: string;
-  company: string;
-}
-
 export interface ChatResponse {
   answer: string;
   subgraph?: SubgraphHighlight;

@@ -109,14 +109,11 @@ export function useVoice() {
   // --- Fire TTS for a single sentence ---
   const fireTTS = useCallback(
     (text: string, index: number) => {
-      const token = useAppStore.getState().token;
-      if (!token) return;
-
       const controller = abortControllerRef.current;
       const signal = controller?.signal;
 
       inFlightRef.current += 1;
-      fetchTTS(text, token, signal)
+      fetchTTS(text, signal)
         .then((blob) => {
           ttsResultsRef.current.set(index, blob);
           drainQueue();
@@ -307,15 +304,9 @@ export function useVoice() {
 
   const speakText = useCallback(
     async (text: string) => {
-      const token = useAppStore.getState().token;
-      if (!token) {
-        setVoiceState("idle");
-        return;
-      }
-
       setVoiceState("speaking");
       try {
-        const blob = await fetchTTS(text, token);
+        const blob = await fetchTTS(text);
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
         audioRef.current = audio;

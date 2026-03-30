@@ -1,16 +1,12 @@
 import { useAppStore } from "./stores/appStore";
-import { useSession } from "./hooks/useSession";
 import { useChat } from "./hooks/useChat";
 import LeftSidebar from "./components/LeftSidebar";
 import GraphCanvas from "./components/GraphCanvas";
 import ChatSidebar from "./components/ChatSidebar";
 import ChatInput from "./components/ChatInput";
-import SignupModal from "./components/SignupModal";
 import NodePopover from "./components/NodePopover";
 
 export default function App() {
-  useSession();
-
   const sidebarOpen = useAppStore((s) => s.sidebarOpen);
   const graphData = useAppStore((s) => s.graphData);
   const { sendMessage } = useChat();
@@ -40,9 +36,6 @@ export default function App() {
 
       {/* Chat Sidebar */}
       <ChatSidebar />
-
-      {/* Signup Modal */}
-      <SignupModal />
 
       {/* Node/Link Popover */}
       <NodePopover />

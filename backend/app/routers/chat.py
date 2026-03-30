@@ -15,15 +15,15 @@ from app.models.schemas import (
     ChatRequest,
     ChatResponse,
     SubgraphHighlight,
-    UserInfo,
 )
-from app.routers.auth import get_current_user
 from app.services.agent_graph import build_agent_graph
 from app.services.chat import add_message, compact_if_needed, get_history
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
+
+_SESSION_ID = "default"
 
 # Build the agent graph once at module level
 _agent = build_agent_graph()
@@ -57,15 +57,13 @@ def _build_config(driver: AsyncDriver, openai_client: AsyncOpenAI) -> dict:
 @router.post("", response_model=ChatResponse)
 async def chat(
     body: ChatRequest,
-    user: UserInfo = Depends(get_current_user),
     driver: AsyncDriver = Depends(get_neo4j_driver),
     openai_client: AsyncOpenAI = Depends(get_openai_client),
 ) -> ChatResponse:
     """Run agent pipeline and return answer with subgraph highlight."""
-    user_id = user.email
-    add_message(user_id, "user", body.message)
-    await compact_if_needed(user_id, openai_client)
-    history = get_history(user_id)
+    add_message(_SESSION_ID, "user", body.message)
+    await compact_if_needed(_SESSION_ID, openai_client)
+    history = get_history(_SESSION_ID)
 
     try:
         result = await _agent.ainvoke(
@@ -81,7 +79,7 @@ async def chat(
     sources = result.get("sources", [])
     spoken_answer = result.get("spoken_answer", "")
 
-    add_message(user_id, "assistant", answer)
+    add_message(_SESSION_ID, "assistant", answer)
 
     return ChatResponse(
         answer=answer,
@@ -97,15 +95,13 @@ async def chat(
 @router.post("/stream")
 async def chat_stream(
     body: ChatRequest,
-    user: UserInfo = Depends(get_current_user),
     driver: AsyncDriver = Depends(get_neo4j_driver),
     openai_client: AsyncOpenAI = Depends(get_openai_client),
 ):
     """SSE streaming endpoint with agent reasoning trace."""
-    user_id = user.email
-    add_message(user_id, "user", body.message)
-    await compact_if_needed(user_id, openai_client)
-    history = get_history(user_id)
+    add_message(_SESSION_ID, "user", body.message)
+    await compact_if_needed(_SESSION_ID, openai_client)
+    history = get_history(_SESSION_ID)
 
     async def event_generator():
         try:
@@ -152,7 +148,7 @@ async def chat_stream(
                             "spoken_answer", ""
                         )
 
-            add_message(user_id, "assistant", final_answer)
+            add_message(_SESSION_ID, "assistant", final_answer)
 
             yield {
                 "event": "done",
@@ -174,9 +170,6 @@ async def chat_stream(
 
 
 @router.get("/history", response_model=list[ChatMessage])
-async def chat_history(
-    user: UserInfo = Depends(get_current_user),
-) -> list[ChatMessage]:
-    """Return the chat history for the current user session."""
-    user_id = user.email
-    return get_history(user_id)
+async def chat_history() -> list[ChatMessage]:
+    """Return the chat history for the current session."""
+    return get_history(_SESSION_ID)

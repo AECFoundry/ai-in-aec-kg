@@ -1,4 +1,4 @@
-import type { GraphData, ChatResponse, UserInfo, ChatMessage, AgentTraceStep } from "./types";
+import type { GraphData, ChatResponse, ChatMessage } from "./types";
 
 const BASE = "/api";
 
@@ -26,47 +26,17 @@ export async function fetchGraph(): Promise<GraphData> {
   return request<GraphData>("/graph");
 }
 
-export async function register(
-  name: string,
-  email: string,
-  company: string
-): Promise<{ token: string }> {
-  return request<{ token: string }>("/register", {
-    method: "POST",
-    body: JSON.stringify({ name, email, company }),
-  });
-}
-
 export async function sendMessage(
   message: string,
-  token: string
 ): Promise<ChatResponse> {
   return request<ChatResponse>("/chat", {
     method: "POST",
     body: JSON.stringify({ message }),
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
   });
 }
 
-export async function getSession(token: string): Promise<UserInfo> {
-  return request<UserInfo>("/session", {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export async function getChatHistory(token: string): Promise<ChatMessage[]> {
-  return request<ChatMessage[]>("/chat/history", {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export async function getChatHistory(): Promise<ChatMessage[]> {
+  return request<ChatMessage[]>("/chat/history");
 }
 
 export type SSEEvent =
@@ -86,14 +56,12 @@ export async function fetchVoiceCapabilities(): Promise<{ tts_available: boolean
 
 export async function fetchTTS(
   text: string,
-  token: string,
   signal?: AbortSignal,
 ): Promise<Blob> {
   const res = await fetch(`${BASE}/voice/tts`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ text }),
     signal,
@@ -104,14 +72,12 @@ export async function fetchTTS(
 
 export async function sendMessageStream(
   message: string,
-  token: string,
   onEvent: (event: SSEEvent) => void,
 ): Promise<void> {
   const res = await fetch(`${BASE}/chat/stream`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ message }),
   });

@@ -18,23 +18,14 @@ export function useChat() {
       if (!trimmed) return;
 
       const {
-        token,
         addMessage,
         updateMessage,
         setLoading,
         setSidebarOpen,
         focusSubgraph,
         clearHighlight,
-        setShowSignup,
-        setPendingQuestion,
         setPendingTTS,
       } = useAppStore.getState();
-
-      if (!token) {
-        setPendingQuestion(trimmed);
-        setShowSignup(true);
-        return;
-      }
 
       addMessage({ role: "user", content: trimmed });
       setSidebarOpen(true);
@@ -62,7 +53,7 @@ export function useChat() {
       const trace: AgentTraceStep[] = [];
 
       try {
-        await sendMessageStream(trimmed, token, (event: SSEEvent) => {
+        await sendMessageStream(trimmed, (event: SSEEvent) => {
           const { updateMessage: update, focusSubgraph: focus } =
             useAppStore.getState();
 
