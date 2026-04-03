@@ -44,6 +44,10 @@ interface AppState {
   setVoiceState: (state: 'idle' | 'listening' | 'processing' | 'speaking') => void;
   setTtsAvailable: (available: boolean) => void;
   setPendingTTS: (pending: boolean) => void;
+
+  // Theme
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
 }
 
 export type { AppState };
@@ -130,4 +134,12 @@ export const useAppStore = create<AppState>()((set) => ({
   setVoiceState: (state) => set({ voiceState: state }),
   setTtsAvailable: (available) => set({ ttsAvailable: available }),
   setPendingTTS: (pending) => set({ pendingTTS: pending }),
+
+  // Theme
+  theme: localStorage.getItem('theme') === 'dark' ? 'dark' as const : 'light' as const,
+  toggleTheme: () => set((state) => {
+    const next = state.theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('theme', next);
+    return { theme: next };
+  }),
 }));

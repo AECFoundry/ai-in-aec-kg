@@ -10,11 +10,41 @@ const DEFAULT_NODE_COLOR = "#8b5cf6";
 const LEFT_SIDEBAR_WIDTH = 320;
 const RIGHT_SIDEBAR_WIDTH = 420;
 
+const THEME_CONFIG = {
+  light: {
+    ambientColor: 0xd0d0e0,
+    ambientIntensity: 2.5,
+    linkGlow: 0x4f46e5,
+    linkCore: 0x3730a3,
+    linkGlowDefault: 0.14,
+    linkGlowHighlight: 0.28,
+    linkGlowDim: 0.05,
+    linkCoreDefault: 0.55,
+    linkCoreHighlight: 0.9,
+    linkCoreDim: 0.15,
+    nodeDim: 0.25,
+  },
+  dark: {
+    ambientColor: 0x404060,
+    ambientIntensity: 1.5,
+    linkGlow: 0x8b9cf8,
+    linkCore: 0xa5b4fc,
+    linkGlowDefault: 0.12,
+    linkGlowHighlight: 0.25,
+    linkGlowDim: 0.06,
+    linkCoreDefault: 0.45,
+    linkCoreHighlight: 0.85,
+    linkCoreDim: 0.12,
+    nodeDim: 0.18,
+  },
+} as const;
+
 export default function GraphCanvas() {
   const graphRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
   const containerRef = useRef<HTMLDivElement>(null);
   const nodeObjectsRef = useRef(new Map<string, THREE.Group>());
   const linkObjectsRef = useRef(new Map<string, THREE.Group>());
+  const themeRef = useRef<'light' | 'dark'>('light');
 
   const sidebarOpen = useAppStore((s) => s.sidebarOpen);
   const setSelectedNode = useAppStore((s) => s.setSelectedNode);
@@ -25,9 +55,11 @@ export default function GraphCanvas() {
   const setFlyToNodeId = useAppStore((s) => s.setFlyToNodeId);
   const focusNode = useAppStore((s) => s.focusNode);
   const clearHighlight = useAppStore((s) => s.clearHighlight);
+  const theme = useAppStore((s) => s.theme);
   const graphData = useGraphData();
 
   const hasHighlight = highlightedNodes.size > 0;
+  themeRef.current = theme;
 
   // Explicit dimensions
   const [dimensions, setDimensions] = useState({
@@ -53,7 +85,7 @@ export default function GraphCanvas() {
     return () => window.removeEventListener("resize", onResize);
   }, [sidebarOpen]);
 
-  // Auto-rotation + scene setup
+  // Auto-rotation + scene setup (theme-aware ambient light)
   useEffect(() => {
     const fg = graphRef.current;
     if (!fg) return;
@@ -64,13 +96,18 @@ export default function GraphCanvas() {
     }
     const scene = fg.scene?.();
     if (scene) {
-      const ambient = new THREE.AmbientLight(0x404060, 1.5);
-      ambient.name = "custom-ambient";
-      if (!scene.getObjectByName("custom-ambient")) {
+      const c = THEME_CONFIG[theme];
+      let ambient = scene.getObjectByName("custom-ambient") as THREE.AmbientLight | undefined;
+      if (!ambient) {
+        ambient = new THREE.AmbientLight(c.ambientColor, c.ambientIntensity);
+        ambient.name = "custom-ambient";
         scene.add(ambient);
+      } else {
+        ambient.color.set(c.ambientColor);
+        ambient.intensity = c.ambientIntensity;
       }
     }
-  }, [graphData]);
+  }, [graphData, theme]);
 
   // Pause auto-rotation when highlighting is active
   useEffect(() => {
@@ -138,11 +175,12 @@ export default function GraphCanvas() {
     return group;
   }, []);
 
-  // Reactively update node materials when highlights change
+  // Reactively update node materials when highlights or theme change
   useEffect(() => {
+    const c = THEME_CONFIG[theme];
     nodeObjectsRef.current.forEach((group, nodeId) => {
       const isHl = highlightedNodes.has(nodeId);
-      const sphereOpacity = hasHighlight ? (isHl ? 1.0 : 0.18) : 0.9;
+      const sphereOpacity = hasHighlight ? (isHl ? 1.0 : c.nodeDim) : 0.9;
       const glowOpacity = hasHighlight && isHl ? 0.15 : 0;
 
       group.children.forEach((child) => {
@@ -155,9 +193,9 @@ export default function GraphCanvas() {
         }
       });
     });
-  }, [highlightedNodes, hasHighlight]);
+  }, [highlightedNodes, hasHighlight, theme]);
 
-  // Custom link object with ref caching
+  // Custom link object with ref caching (reads current theme via ref)
   const linkThreeObject = useCallback((link: GraphLink) => {
     const sourceId =
       typeof link.source === "string" ? link.source : link.source.id;
@@ -165,13 +203,14 @@ export default function GraphCanvas() {
       typeof link.target === "string" ? link.target : link.target.id;
     const linkKey = `${sourceId}->${targetId}`;
 
+    const c = THEME_CONFIG[themeRef.current];
     const group = new THREE.Group();
 
     // Outer glow
     const glowMat = new THREE.MeshBasicMaterial({
-      color: 0x8b9cf8,
+      color: c.linkGlow,
       transparent: true,
-      opacity: 0.12,
+      opacity: c.linkGlowDefault,
     });
     const glowGeo = new THREE.CylinderGeometry(0.6, 0.6, 1, 4);
     glowGeo.rotateX(Math.PI / 2);
@@ -182,9 +221,9 @@ export default function GraphCanvas() {
 
     // Core line
     const coreMat = new THREE.MeshBasicMaterial({
-      color: 0xa5b4fc,
+      color: c.linkCore,
       transparent: true,
-      opacity: 0.45,
+      opacity: c.linkCoreDefault,
     });
     const coreGeo = new THREE.CylinderGeometry(0.12, 0.12, 1, 4);
     coreGeo.rotateX(Math.PI / 2);
@@ -197,8 +236,25 @@ export default function GraphCanvas() {
     return group;
   }, []);
 
-  // Reactively update link materials when highlights change
+  // Update link material colors when theme changes
   useEffect(() => {
+    const c = THEME_CONFIG[theme];
+    linkObjectsRef.current.forEach((group) => {
+      group.children.forEach((child) => {
+        const mesh = child as THREE.Mesh;
+        if (mesh.name === "glow") {
+          (mesh.material as THREE.MeshBasicMaterial).color.set(c.linkGlow);
+        }
+        if (mesh.name === "core") {
+          (mesh.material as THREE.MeshBasicMaterial).color.set(c.linkCore);
+        }
+      });
+    });
+  }, [theme]);
+
+  // Reactively update link materials when highlights or theme change
+  useEffect(() => {
+    const c = THEME_CONFIG[theme];
     linkObjectsRef.current.forEach((group, linkKey) => {
       const isHl = highlightedLinks.has(linkKey);
       // Also highlight links connecting two highlighted nodes
@@ -214,20 +270,20 @@ export default function GraphCanvas() {
         if (mesh.name === "glow") {
           (mesh.material as THREE.MeshBasicMaterial).opacity = hasHighlight
             ? shouldHighlight
-              ? 0.25
-              : 0.06
-            : 0.12;
+              ? c.linkGlowHighlight
+              : c.linkGlowDim
+            : c.linkGlowDefault;
         }
         if (mesh.name === "core") {
           (mesh.material as THREE.MeshBasicMaterial).opacity = hasHighlight
             ? shouldHighlight
-              ? 0.85
-              : 0.12
-            : 0.45;
+              ? c.linkCoreHighlight
+              : c.linkCoreDim
+            : c.linkCoreDefault;
         }
       });
     });
-  }, [highlightedLinks, highlightedNodes, hasHighlight]);
+  }, [highlightedLinks, highlightedNodes, hasHighlight, theme]);
 
   // Position custom link objects between source and target
   const linkPositionUpdate = useCallback(
@@ -320,7 +376,7 @@ export default function GraphCanvas() {
       <div className="flex items-center justify-center h-screen w-full">
         <div className="flex flex-col items-center gap-4">
           <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-slate-400 tracking-wide">
+          <p className="text-sm text-tertiary tracking-wide">
             Loading knowledge graph...
           </p>
         </div>
@@ -337,8 +393,7 @@ export default function GraphCanvas() {
         width: sidebarOpen
           ? `calc(100% - ${LEFT_SIDEBAR_WIDTH}px - ${RIGHT_SIDEBAR_WIDTH}px)`
           : `calc(100% - ${LEFT_SIDEBAR_WIDTH}px)`,
-        background:
-          "radial-gradient(ellipse at 50% 50%, #1e2558 0%, #171e4a 35%, #0e1535 70%, #060918 100%)",
+        background: "var(--t-graph-bg)",
       }}
     >
       <ForceGraph3D

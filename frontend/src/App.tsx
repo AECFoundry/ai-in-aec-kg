@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useAppStore } from "./stores/appStore";
 import { useChat } from "./hooks/useChat";
 import LeftSidebar from "./components/LeftSidebar";
@@ -9,10 +10,15 @@ import NodePopover from "./components/NodePopover";
 export default function App() {
   const sidebarOpen = useAppStore((s) => s.sidebarOpen);
   const graphData = useAppStore((s) => s.graphData);
+  const theme = useAppStore((s) => s.theme);
   const { sendMessage } = useChat();
 
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
+
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#060918]">
+    <div className="relative w-screen h-screen overflow-hidden bg-canvas">
       {/* Left sidebar — node/relationship browser */}
       <LeftSidebar />
 

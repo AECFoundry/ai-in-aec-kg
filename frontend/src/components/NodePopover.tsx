@@ -48,7 +48,7 @@ function TopicBadges({ nodeId }: { nodeId: string }) {
   const topicColor = nodeColors.Topic ?? "#f43f5e";
   return (
     <div className="mb-4">
-      <h4 className="text-[11px] uppercase tracking-wider text-slate-400 mb-2">Topics</h4>
+      <h4 className="text-[11px] uppercase tracking-wider text-tertiary mb-2">Topics</h4>
       <div className="flex flex-wrap gap-1.5">
         {topics.map((t) => (
           <span
@@ -125,13 +125,13 @@ function SessionContent({
         </span>
       </div>
 
-      <h3 className="text-lg font-semibold text-white mb-4 leading-snug">
+      <h3 className="text-lg font-semibold text-heading mb-4 leading-snug">
         {node.name || node.id}
       </h3>
 
       {summary && (
         <div className="mb-4">
-          <p className="text-sm text-slate-300 leading-relaxed">
+          <p className="text-sm text-secondary leading-relaxed">
             {expanded || !needsTruncation
               ? summary
               : `${summary.slice(0, SUMMARY_COLLAPSED_LEN).trimEnd()}...`}
@@ -151,7 +151,7 @@ function SessionContent({
 
       {presentations.length > 0 && (
         <div className="mb-4">
-          <h4 className="text-[11px] uppercase tracking-wider text-slate-400 mb-2">
+          <h4 className="text-[11px] uppercase tracking-wider text-tertiary mb-2">
             Presentations
           </h4>
           <div className="space-y-1">
@@ -161,8 +161,8 @@ function SessionContent({
                 onClick={() => onNavigate(pres.id)}
                 className="
                   flex items-center gap-2 w-full px-3 py-2
-                  rounded-xl bg-white/[0.04] border border-white/[0.06]
-                  hover:bg-white/[0.08] hover:border-white/[0.1]
+                  rounded-xl bg-surface border border-edge
+                  hover:bg-raised hover:border-edge-strong
                   transition-all duration-200 group text-left
                 "
               >
@@ -170,11 +170,11 @@ function SessionContent({
                   className="w-2 h-2 rounded-full shrink-0"
                   style={{ backgroundColor: presColor }}
                 />
-                <span className="flex-1 text-sm text-slate-300 group-hover:text-white transition-colors">
+                <span className="flex-1 text-sm text-secondary group-hover:text-heading transition-colors">
                   {pres.name}
                 </span>
                 <svg
-                  className="text-slate-400 group-hover:text-slate-400 transition-colors shrink-0"
+                  className="text-tertiary shrink-0"
                   width="14"
                   height="14"
                   viewBox="0 0 24 24"
@@ -196,10 +196,10 @@ function SessionContent({
         <div className="space-y-2.5">
           {extraProps.map(([key, value]) => (
             <div key={key}>
-              <dt className="text-[11px] uppercase tracking-wider text-slate-400 mb-0.5">
+              <dt className="text-[11px] uppercase tracking-wider text-tertiary mb-0.5">
                 {key.replace(/_/g, " ")}
               </dt>
-              <dd className="text-sm text-slate-300 leading-relaxed">
+              <dd className="text-sm text-secondary leading-relaxed">
                 {typeof value === "string" ? value : JSON.stringify(value)}
               </dd>
             </div>
@@ -270,14 +270,14 @@ function PresentationContent({
         </span>
       </div>
 
-      <h3 className="text-lg font-semibold text-white mb-3 leading-snug">
+      <h3 className="text-lg font-semibold text-heading mb-3 leading-snug">
         {node.name || node.id}
       </h3>
 
       {speakers.length > 0 && (
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <svg
-            className="text-slate-400 shrink-0"
+            className="text-tertiary shrink-0"
             width="14"
             height="14"
             viewBox="0 0 24 24"
@@ -290,7 +290,7 @@ function PresentationContent({
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
-          <span className="text-sm text-slate-300">
+          <span className="text-sm text-secondary">
             {speakers.join(", ")}
           </span>
         </div>
@@ -298,7 +298,7 @@ function PresentationContent({
 
       {/* Short summary — always visible */}
       {summary && (
-        <p className="text-sm text-slate-300 leading-relaxed mb-3">{summary}</p>
+        <p className="text-sm text-secondary leading-relaxed mb-3">{summary}</p>
       )}
 
       {/* Detailed summary — expandable */}
@@ -311,7 +311,7 @@ function PresentationContent({
             {detailExpanded ? "Hide detailed summary" : "Detailed summary..."}
           </button>
           {detailExpanded && (
-            <p className="text-sm text-slate-400 leading-relaxed">
+            <p className="text-sm text-tertiary leading-relaxed">
               {detailNeedsTruncation && !detailExpanded
                 ? `${detailedSummary.slice(0, DETAILED_SUMMARY_COLLAPSED_LEN).trimEnd()}...`
                 : detailedSummary}
@@ -327,8 +327,8 @@ function PresentationContent({
           onClick={() => onNavigate(sessionNode.id)}
           className="
             flex items-center gap-2 w-full px-3 py-2.5 mb-4
-            rounded-xl bg-white/[0.04] border border-white/[0.06]
-            hover:bg-white/[0.08] hover:border-white/[0.1]
+            rounded-xl bg-surface border border-edge
+            hover:bg-raised hover:border-edge-strong
             transition-all duration-200 group text-left
           "
         >
@@ -336,11 +336,11 @@ function PresentationContent({
             className="w-2.5 h-2.5 rounded-full shrink-0"
             style={{ backgroundColor: nodeColors.Session }}
           />
-          <span className="flex-1 text-sm text-slate-300 group-hover:text-white transition-colors truncate">
+          <span className="flex-1 text-sm text-secondary group-hover:text-heading transition-colors truncate">
             {sessionNode.name}
           </span>
           <svg
-            className="text-slate-400 group-hover:text-slate-400 transition-colors shrink-0"
+            className="text-tertiary shrink-0"
             width="14"
             height="14"
             viewBox="0 0 24 24"
@@ -359,10 +359,10 @@ function PresentationContent({
         <div className="space-y-2.5">
           {extraProps.map(([key, value]) => (
             <div key={key}>
-              <dt className="text-[11px] uppercase tracking-wider text-slate-400 mb-0.5">
+              <dt className="text-[11px] uppercase tracking-wider text-tertiary mb-0.5">
                 {key.replace(/_/g, " ")}
               </dt>
-              <dd className="text-sm text-slate-300 leading-relaxed">
+              <dd className="text-sm text-secondary leading-relaxed">
                 {typeof value === "string" ? value : JSON.stringify(value)}
               </dd>
             </div>
@@ -397,7 +397,7 @@ function NodeContent({ node, onNavigate }: { node: GraphNode; onNavigate: (nodeI
         </span>
       </div>
 
-      <h3 className="text-lg font-semibold text-white mb-4 leading-snug">
+      <h3 className="text-lg font-semibold text-heading mb-4 leading-snug">
         {node.name || node.id}
       </h3>
 
@@ -405,10 +405,10 @@ function NodeContent({ node, onNavigate }: { node: GraphNode; onNavigate: (nodeI
         <div className="space-y-2.5">
           {filteredProps.map(([key, value]) => (
             <div key={key}>
-              <dt className="text-[11px] uppercase tracking-wider text-slate-400 mb-0.5">
+              <dt className="text-[11px] uppercase tracking-wider text-tertiary mb-0.5">
                 {key.replace(/_/g, " ")}
               </dt>
-              <dd className="text-sm text-slate-300 leading-relaxed">
+              <dd className="text-sm text-secondary leading-relaxed">
                 {typeof value === "string"
                   ? value.length > 200
                     ? `${value.slice(0, 200)}...`
@@ -440,13 +440,13 @@ function LinkContent({ link }: { link: GraphLink }) {
   return (
     <>
       <div className="flex items-center gap-3 mb-4">
-        <span className="px-2.5 py-1 rounded-full text-[11px] font-medium uppercase tracking-wider bg-white/[0.06] text-slate-300 border border-white/[0.1]">
+        <span className="px-2.5 py-1 rounded-full text-[11px] font-medium uppercase tracking-wider bg-surface-hover text-secondary border border-edge-strong">
           Relationship
         </span>
       </div>
 
       <div className="flex items-center gap-2 mb-4 text-sm">
-        <span className="text-white font-medium">{sourceName}</span>
+        <span className="text-heading font-medium">{sourceName}</span>
         <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[11px] tracking-wider uppercase">
           <svg
             width="12"
@@ -461,17 +461,17 @@ function LinkContent({ link }: { link: GraphLink }) {
           </svg>
           {link.type}
         </span>
-        <span className="text-white font-medium">{targetName}</span>
+        <span className="text-heading font-medium">{targetName}</span>
       </div>
 
       {filteredProps.length > 0 && (
         <div className="space-y-2.5">
           {filteredProps.map(([key, value]) => (
             <div key={key}>
-              <dt className="text-[11px] uppercase tracking-wider text-slate-400 mb-0.5">
+              <dt className="text-[11px] uppercase tracking-wider text-tertiary mb-0.5">
                 {key.replace(/_/g, " ")}
               </dt>
-              <dd className="text-sm text-slate-300 leading-relaxed">
+              <dd className="text-sm text-secondary leading-relaxed">
                 {typeof value === "string" ? value : JSON.stringify(value)}
               </dd>
             </div>
@@ -547,8 +547,8 @@ export default function NodePopover() {
             className="
               fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
               w-[440px] max-h-[70vh] overflow-y-auto
-              bg-[#0a0a1a]/90 backdrop-blur-2xl
-              border border-white/[0.08]
+              bg-overlay backdrop-blur-2xl
+              border border-edge-mid
               rounded-2xl
               p-6
               shadow-2xl shadow-black/50
@@ -560,8 +560,8 @@ export default function NodePopover() {
               className="
                 absolute top-4 right-4
                 p-1.5 rounded-lg
-                hover:bg-white/[0.06]
-                text-slate-400 hover:text-white
+                hover:bg-surface-hover
+                text-tertiary hover:text-heading
                 transition-all duration-200
               "
             >

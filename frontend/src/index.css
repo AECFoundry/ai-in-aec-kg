@@ -1,9 +1,80 @@
 @import "tailwindcss";
 
+/* Semantic theme tokens — Tailwind generates utilities like bg-canvas, text-heading, border-edge */
+@theme {
+  --color-canvas: var(--t-canvas);
+  --color-panel: var(--t-panel);
+  --color-overlay: var(--t-overlay);
+  --color-surface: var(--t-surface);
+  --color-surface-hover: var(--t-surface-hover);
+  --color-raised: var(--t-raised);
+  --color-dim: var(--t-dim);
+  --color-edge: var(--t-edge);
+  --color-edge-mid: var(--t-edge-mid);
+  --color-edge-strong: var(--t-edge-strong);
+  --color-heading: var(--t-heading);
+  --color-body: var(--t-body);
+  --color-secondary: var(--t-secondary);
+  --color-tertiary: var(--t-tertiary);
+  --color-ghost: var(--t-ghost);
+}
+
+/* Light theme (default) */
+:root {
+  --t-canvas: #f1f5f9;
+  --t-panel: rgba(255, 255, 255, 0.88);
+  --t-overlay: rgba(255, 255, 255, 0.95);
+  --t-surface: rgba(0, 0, 0, 0.04);
+  --t-surface-hover: rgba(0, 0, 0, 0.06);
+  --t-raised: rgba(0, 0, 0, 0.08);
+  --t-dim: rgba(0, 0, 0, 0.03);
+  --t-edge: rgba(0, 0, 0, 0.1);
+  --t-edge-mid: rgba(0, 0, 0, 0.12);
+  --t-edge-strong: rgba(0, 0, 0, 0.18);
+  --t-heading: #0f172a;
+  --t-body: #1e293b;
+  --t-secondary: #475569;
+  --t-tertiary: #64748b;
+  --t-ghost: #94a3b8;
+  --t-scrollbar: rgba(0, 0, 0, 0.12);
+  --t-scrollbar-hover: rgba(0, 0, 0, 0.22);
+  --t-shimmer-from: rgba(0, 0, 0, 0.04);
+  --t-shimmer-mid: rgba(0, 0, 0, 0.07);
+  --t-selection-bg: rgba(99, 102, 241, 0.2);
+  --t-selection-text: #1e293b;
+  --t-graph-bg: radial-gradient(ellipse at 50% 50%, #f8fafc 0%, #f1f5f9 35%, #e8ecf3 70%, #dfe4ef 100%);
+}
+
+/* Dark theme */
+.dark {
+  --t-canvas: #060918;
+  --t-panel: rgba(6, 9, 24, 0.8);
+  --t-overlay: rgba(10, 10, 26, 0.9);
+  --t-surface: rgba(255, 255, 255, 0.04);
+  --t-surface-hover: rgba(255, 255, 255, 0.06);
+  --t-raised: rgba(255, 255, 255, 0.08);
+  --t-dim: rgba(255, 255, 255, 0.03);
+  --t-edge: rgba(255, 255, 255, 0.06);
+  --t-edge-mid: rgba(255, 255, 255, 0.08);
+  --t-edge-strong: rgba(255, 255, 255, 0.1);
+  --t-heading: #ffffff;
+  --t-body: #e2e8f0;
+  --t-secondary: #cbd5e1;
+  --t-tertiary: #94a3b8;
+  --t-ghost: #64748b;
+  --t-scrollbar: rgba(255, 255, 255, 0.1);
+  --t-scrollbar-hover: rgba(255, 255, 255, 0.2);
+  --t-shimmer-from: rgba(255, 255, 255, 0.03);
+  --t-shimmer-mid: rgba(255, 255, 255, 0.07);
+  --t-selection-bg: rgba(99, 102, 241, 0.4);
+  --t-selection-text: #e2e8f0;
+  --t-graph-bg: radial-gradient(ellipse at 50% 50%, #1e2558 0%, #171e4a 35%, #0e1535 70%, #060918 100%);
+}
+
 body {
   margin: 0;
-  background: #060918;
-  color: #e2e8f0;
+  background: var(--t-canvas);
+  color: var(--t-body);
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, sans-serif;
   overflow: hidden;
@@ -12,8 +83,8 @@ body {
 }
 
 ::selection {
-  background: rgba(99, 102, 241, 0.4);
-  color: #e2e8f0;
+  background: var(--t-selection-bg);
+  color: var(--t-selection-text);
 }
 
 /* Scrollbar styling */
@@ -26,18 +97,18 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--t-scrollbar);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--t-scrollbar-hover);
 }
 
 /* Firefox scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  scrollbar-color: var(--t-scrollbar) transparent;
 }
 
 /* Breathing glow for agent reasoning */
@@ -65,9 +136,9 @@ body {
 .skeleton-shimmer {
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.03) 25%,
-    rgba(255, 255, 255, 0.07) 50%,
-    rgba(255, 255, 255, 0.03) 75%
+    var(--t-shimmer-from) 25%,
+    var(--t-shimmer-mid) 50%,
+    var(--t-shimmer-from) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.8s ease-in-out infinite;

@@ -8,15 +8,15 @@ import ChatInput from "./ChatInput";
 import type { ChatMessage, SourceRef, AgentTraceStep } from "../lib/types";
 
 const PROSE_CLASSES =
-  "prose prose-invert prose-sm max-w-none " +
+  "max-w-none " +
   "[&_p]:my-1.5 [&_ul]:my-1.5 [&_ol]:my-1.5 [&_li]:my-0.5 " +
-  "[&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-slate-200 [&_h3]:mt-3 [&_h3]:mb-1 " +
-  "[&_h4]:text-xs [&_h4]:font-semibold [&_h4]:text-slate-300 [&_h4]:mt-2 [&_h4]:mb-1 " +
-  "[&_strong]:text-slate-100 [&_em]:text-slate-300 " +
-  "[&_code]:text-indigo-300 [&_code]:bg-white/5 [&_code]:px-1 [&_code]:rounded " +
-  "[&_pre]:bg-white/5 [&_pre]:rounded-lg [&_pre]:p-3 " +
-  "[&_a]:text-indigo-400 [&_blockquote]:border-indigo-500/30 [&_blockquote]:text-slate-400 " +
-  "[&_hr]:border-white/[0.06]";
+  "[&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-body [&_h3]:mt-3 [&_h3]:mb-1 " +
+  "[&_h4]:text-xs [&_h4]:font-semibold [&_h4]:text-secondary [&_h4]:mt-2 [&_h4]:mb-1 " +
+  "[&_strong]:text-heading [&_em]:text-secondary " +
+  "[&_code]:text-indigo-300 [&_code]:bg-surface [&_code]:px-1 [&_code]:rounded " +
+  "[&_pre]:bg-surface [&_pre]:rounded-lg [&_pre]:p-3 " +
+  "[&_a]:text-indigo-400 [&_blockquote]:border-indigo-500/30 [&_blockquote]:text-tertiary " +
+  "[&_hr]:border-edge";
 
 const CITE_RE = /\[(\d+)\]/g;
 
@@ -160,8 +160,8 @@ function AgentTrace({ steps, isStreaming }: { steps: AgentTraceStep[]; isStreami
     <div className={`mb-2 rounded-lg px-2.5 py-1.5 -mx-1 ${isStreaming ? "animate-breathe-glow" : ""}`}>
       <button
         onClick={() => setExpanded(!expanded)}
-        className={`flex items-center gap-1.5 text-[10px] hover:text-slate-300 transition-colors uppercase tracking-wider font-medium ${
-          isStreaming ? "text-indigo-400" : "text-slate-400"
+        className={`flex items-center gap-1.5 text-[10px] hover:text-secondary transition-colors uppercase tracking-wider font-medium ${
+          isStreaming ? "text-indigo-400" : "text-tertiary"
         }`}
       >
         <motion.svg
@@ -188,21 +188,21 @@ function AgentTrace({ steps, isStreaming }: { steps: AgentTraceStep[]; isStreami
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="mt-1.5 ml-1 border-l border-white/[0.06] pl-3 space-y-1">
+            <div className="mt-1.5 ml-1 border-l border-edge pl-3 space-y-1">
               {steps.map((step, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, x: -4 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.15, delay: isStreaming ? 0.05 : 0 }}
-                  className="flex items-start gap-2 text-[11px] text-slate-400"
+                  className="flex items-start gap-2 text-[11px] text-tertiary"
                 >
                   <span className={`mt-0.5 shrink-0 ${
                     step.type === "tool_result"
                       ? "text-emerald-500/70"
                       : step.type === "tool_call"
                         ? "text-indigo-400/70"
-                        : "text-slate-400/70"
+                        : "text-tertiary/70"
                   }`}>
                     {traceIcons[step.type]}
                   </span>
@@ -213,7 +213,7 @@ function AgentTrace({ steps, isStreaming }: { steps: AgentTraceStep[]; isStreami
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="flex items-center gap-1.5 text-[11px] text-slate-400"
+                  className="flex items-center gap-1.5 text-[11px] text-tertiary"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-400/50 animate-pulse" />
                 </motion.div>
@@ -253,7 +253,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   if (message.isStreaming && !message.content && (!message.agentTrace || message.agentTrace.length === 0)) {
     return (
       <div className="flex justify-start mb-4">
-        <div className="bg-white/[0.04] border border-white/[0.06] rounded-2xl rounded-bl-md px-5 py-4">
+        <div className="bg-surface border border-edge rounded-2xl rounded-bl-md px-5 py-4">
           <div className="flex gap-1.5">
             <span className="w-2 h-2 bg-indigo-400/60 rounded-full animate-bounce [animation-delay:0ms]" />
             <span className="w-2 h-2 bg-indigo-400/60 rounded-full animate-bounce [animation-delay:150ms]" />
@@ -272,7 +272,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           ${
             isUser
               ? "max-w-[85%] bg-indigo-600/60 text-white rounded-br-md"
-              : "w-full bg-white/[0.04] border border-white/[0.06] text-slate-200 rounded-bl-md"
+              : "w-full bg-surface border border-edge text-body rounded-bl-md"
           }
         `}
       >
@@ -299,14 +299,14 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 
         {/* Sources footnote list */}
         {sources.length > 0 && (
-          <div className="mt-3 pt-2 border-t border-white/[0.06] space-y-1">
+          <div className="mt-3 pt-2 border-t border-edge space-y-1">
             {sources.map((source, i) => {
               const color = nodeColors[source.label] ?? "#6366f1";
               return (
                 <button
                   key={i}
                   onClick={() => handleSourceClick(source.id)}
-                  className="flex items-center gap-2 w-full text-left px-2 py-1 rounded-lg hover:bg-white/[0.04] transition-colors duration-150 group"
+                  className="flex items-center gap-2 w-full text-left px-2 py-1 rounded-lg hover:bg-surface transition-colors duration-150 group"
                 >
                   <span
                     className="shrink-0 w-5 h-5 flex items-center justify-center rounded text-[10px] font-semibold"
@@ -317,10 +317,10 @@ function MessageBubble({ message }: { message: ChatMessage }) {
                   >
                     {source.citation ?? i + 1}
                   </span>
-                  <span className="text-[12px] text-slate-400 group-hover:text-slate-200 truncate transition-colors">
+                  <span className="text-[12px] text-tertiary group-hover:text-body truncate transition-colors">
                     {source.name}
                   </span>
-                  <span className="ml-auto text-[10px] text-slate-400 uppercase tracking-wider shrink-0">
+                  <span className="ml-auto text-[10px] text-tertiary uppercase tracking-wider shrink-0">
                     {source.label}
                   </span>
                 </button>
@@ -368,18 +368,18 @@ export default function ChatSidebar() {
           transition={{ type: "spring", damping: 30, stiffness: 300 }}
           className="
             fixed top-0 right-0 h-full w-[420px] z-40
-            bg-[#060918]/80 backdrop-blur-2xl
-            border-l border-white/[0.06]
+            bg-panel backdrop-blur-2xl
+            border-l border-edge
             flex flex-col
           "
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.06]">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-edge">
             <div>
-              <h2 className="text-base font-semibold text-white tracking-wide">
+              <h2 className="text-base font-semibold text-heading tracking-wide">
                 AI in AEC Explorer
               </h2>
-              <p className="text-[11px] text-slate-400 mt-0.5 tracking-wider uppercase">
+              <p className="text-[11px] text-tertiary mt-0.5 tracking-wider uppercase">
                 Knowledge Graph Chat
               </p>
             </div>
@@ -390,8 +390,8 @@ export default function ChatSidebar() {
                   title="Clear chat"
                   className="
                     p-2 rounded-xl
-                    hover:bg-white/[0.06]
-                    text-slate-400 hover:text-slate-200
+                    hover:bg-surface-hover
+                    text-tertiary hover:text-body
                     transition-all duration-200
                   "
                 >
@@ -414,8 +414,8 @@ export default function ChatSidebar() {
                 onClick={handleClose}
                 className="
                   p-2 rounded-xl
-                  hover:bg-white/[0.06]
-                  text-slate-400 hover:text-white
+                  hover:bg-surface-hover
+                  text-tertiary hover:text-heading
                   transition-all duration-200
                 "
               >
@@ -449,11 +449,11 @@ export default function ChatSidebar() {
                   strokeWidth="1"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-slate-400 mb-4"
+                  className="text-tertiary mb-4"
                 >
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-tertiary">
                   Ask a question to explore
                   <br />
                   the knowledge graph
@@ -469,7 +469,7 @@ export default function ChatSidebar() {
           </div>
 
           {/* Input */}
-          <div className="px-5 py-4 border-t border-white/[0.06]">
+          <div className="px-5 py-4 border-t border-edge">
             <ChatInput
               onSubmit={sendMessage}
               disabled={isLoading}

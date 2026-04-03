@@ -25,7 +25,7 @@ function SearchInput({
   return (
     <div className="relative">
       <svg
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+        className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary"
         width="14"
         height="14"
         viewBox="0 0 24 24"
@@ -45,16 +45,16 @@ function SearchInput({
         placeholder="Search nodes..."
         className="
           w-full pl-9 pr-3 py-2 rounded-xl
-          bg-white/[0.04] border border-white/[0.06]
-          text-sm text-slate-200 placeholder-slate-500
-          outline-none focus:border-indigo-500/30 focus:bg-white/[0.06]
+          bg-surface border border-edge
+          text-sm text-body placeholder-ghost
+          outline-none focus:border-indigo-500/30 focus:bg-surface-hover
           transition-all duration-200
         "
       />
       {value && (
         <button
           onClick={() => onChange("")}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary hover:text-secondary transition-colors"
         >
           <svg
             width="12"
@@ -97,8 +97,8 @@ function NodeRow({
         transition-all duration-150 group
         ${
           isHighlighted
-            ? "bg-white/[0.08] border-l-2"
-            : "hover:bg-white/[0.04] border-l-2 border-transparent"
+            ? "bg-raised border-l-2"
+            : "hover:bg-surface border-l-2 border-transparent"
         }
       `}
       style={
@@ -112,8 +112,8 @@ function NodeRow({
       <span
         className={`text-[13px] truncate ${
           isHighlighted
-            ? "text-white font-medium"
-            : "text-slate-400 group-hover:text-slate-200"
+            ? "text-heading font-medium"
+            : "text-tertiary group-hover:text-body"
         }`}
       >
         {node.name || node.id}
@@ -152,7 +152,7 @@ function GroupSection({
         onClick={onToggle}
         className="
           w-full flex items-center gap-2.5 px-4 py-2
-          hover:bg-white/[0.03] transition-colors duration-150
+          hover:bg-dim transition-colors duration-150
           text-left
         "
       >
@@ -160,7 +160,7 @@ function GroupSection({
           className="w-2.5 h-2.5 rounded-full shrink-0"
           style={{ backgroundColor: color }}
         />
-        <span className="text-[12px] font-semibold uppercase tracking-wider text-slate-400 flex-1">
+        <span className="text-[12px] font-semibold uppercase tracking-wider text-tertiary flex-1">
           {type === "Technology" ? "Technologies" : `${type}s`}
         </span>
         {highlightedCount > 0 && (
@@ -174,11 +174,11 @@ function GroupSection({
             {highlightedCount}
           </span>
         )}
-        <span className="text-[11px] text-slate-400 tabular-nums">
+        <span className="text-[11px] text-tertiary tabular-nums">
           {nodes.length}
         </span>
         <svg
-          className={`text-slate-400 transition-transform duration-200 ${
+          className={`text-tertiary transition-transform duration-200 ${
             isCollapsed ? "" : "rotate-90"
           }`}
           width="12"
@@ -217,7 +217,7 @@ function GroupSection({
                 />
               ))}
               {nodes.length === 0 && searchQuery && (
-                <p className="text-[12px] text-slate-400 px-3 py-2">
+                <p className="text-[12px] text-tertiary px-3 py-2">
                   No matches
                 </p>
               )}
@@ -226,6 +226,48 @@ function GroupSection({
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function LogoImage() {
+  const theme = useAppStore((s) => s.theme);
+  return (
+    <img
+      src={theme === "dark" ? "/logo.png" : "/logo-dark.png"}
+      alt="AECFoundry"
+      className="h-7"
+    />
+  );
+}
+
+function ThemeToggle() {
+  const theme = useAppStore((s) => s.theme);
+  const toggleTheme = useAppStore((s) => s.toggleTheme);
+
+  return (
+    <button
+      onClick={toggleTheme}
+      className="p-2 rounded-xl hover:bg-surface text-tertiary hover:text-body transition-all duration-200"
+      title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+    >
+      {theme === "dark" ? (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+      ) : (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      )}
+    </button>
   );
 }
 
@@ -303,19 +345,19 @@ export default function LeftSidebar() {
     <aside
       className="
         fixed top-0 left-0 h-full w-[320px] z-40
-        bg-[#060918]/80 backdrop-blur-2xl
-        border-r border-white/[0.06]
+        bg-panel backdrop-blur-2xl
+        border-r border-edge
         flex flex-col
       "
     >
       {/* Header */}
-      <div className="px-5 pt-5 pb-4 border-b border-white/[0.06]">
+      <div className="px-5 pt-5 pb-4 border-b border-edge">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="text-base font-semibold text-white tracking-wide">
+            <h2 className="text-base font-semibold text-heading tracking-wide">
               AI in AEC 2026
             </h2>
-            <p className="text-[11px] text-slate-400 mt-0.5 tracking-wider">
+            <p className="text-[11px] text-tertiary mt-0.5 tracking-wider">
               {isLoading ? (
                 <span className="inline-block w-32 h-3 rounded skeleton-shimmer" />
               ) : (
@@ -323,6 +365,7 @@ export default function LeftSidebar() {
               )}
             </p>
           </div>
+          <ThemeToggle />
         </div>
         <SearchInput value={searchQuery} onChange={setSearchQuery} />
       </div>
@@ -353,21 +396,17 @@ export default function LeftSidebar() {
       </div>
 
       {/* Footer — Powered by logo */}
-      <div className="px-5 py-4 border-t border-white/[0.06]">
+      <div className="px-5 py-4 border-t border-edge">
         <a
           href="https://www.aecfoundry.com"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2.5 opacity-60 hover:opacity-90 transition-opacity duration-200"
         >
-          <span className="text-[11px] text-slate-400 uppercase tracking-widest">
+          <span className="text-[11px] text-tertiary uppercase tracking-widest">
             Powered by
           </span>
-          <img
-            src="/logo.png"
-            alt="AECFoundry"
-            className="h-7"
-          />
+          <LogoImage />
         </a>
       </div>
     </aside>

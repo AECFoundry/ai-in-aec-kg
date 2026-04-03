@@ -49,12 +49,13 @@ export default function ChatInput({
         disabled={disabled}
         className="
           flex-1 px-5 py-3.5 rounded-2xl
-          bg-white/[0.04] backdrop-blur-xl
-          border border-white/[0.08]
-          text-slate-200 placeholder-slate-500
+          bg-surface backdrop-blur-xl
+          border border-edge-mid
+          text-body placeholder-ghost
           text-sm tracking-wide
           outline-none
           focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/25
+          focus:bg-surface-hover
           transition-all duration-300
           disabled:opacity-50
         "
