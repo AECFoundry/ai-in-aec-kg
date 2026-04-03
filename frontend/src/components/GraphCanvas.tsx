@@ -338,7 +338,7 @@ export default function GraphCanvas() {
           ? `calc(100% - ${LEFT_SIDEBAR_WIDTH}px - ${RIGHT_SIDEBAR_WIDTH}px)`
           : `calc(100% - ${LEFT_SIDEBAR_WIDTH}px)`,
         background:
-          "radial-gradient(ellipse at 50% 50%, #111638 0%, #0a1028 40%, #060918 100%)",
+          "radial-gradient(ellipse at 50% 50%, #1e2558 0%, #171e4a 35%, #0e1535 70%, #060918 100%)",
       }}
     >
       <ForceGraph3D
